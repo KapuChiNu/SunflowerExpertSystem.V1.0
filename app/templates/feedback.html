@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Feedback • Sunflower Diagnosis{% endblock %}
+
+{% block content %}
+<div class="sf-page-head">
+  <div>
+    <div class="sf-page-kicker">Support</div>
+    <h1 class="sf-h1 mb-1">Feedback & Suggestions</h1>
+    <div class="sf-muted">Send notes to the admin team and track your submissions.</div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="sf-panel">
+      <div class="sf-panel-head">
+        <div>
+          <div class="sf-panel-title">Write feedback</div>
+          <div class="sf-muted">Tell us what works and what we can improve.</div>
+        </div>
+      </div>
+      <form method="post">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+          {{ form.subject.label(class="form-label") }}
+          {{ form.subject(class="form-control", placeholder="Short subject") }}
+        </div>
+        <div class="mb-3">
+          {{ form.message.label(class="form-label") }}
+          {{ form.message(class="form-control", rows="5", placeholder="Describe your feedback or issue") }}
+        </div>
+        <button type="submit" class="sf-primary-btn">{{ form.submit.label.text }}</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="sf-panel">
+      <div class="sf-panel-head">
+        <div>
+          <div class="sf-panel-title">Your submissions</div>
+          <div class="sf-muted">Latest feedback you sent.</div>
+        </div>
+      </div>
+
+      {% if feedback_items %}
+        <div class="sf-feedback-list">
+          {% for f in feedback_items %}
+            <div class="sf-feedback-item">
+              <div>
+                <div class="sf-feedback-title">{{ f.subject }}</div>
+                <div class="sf-feedback-meta">{{ f.created_at.strftime("%b %d, %Y %H:%M") }}</div>
+              </div>
+              <span class="sf-status sf-status-{{ f.status }}">{{ f.status }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="sf-empty">
+          <div class="sf-empty-title">No feedback yet</div>
+          <div class="sf-muted">Your submissions will appear here.</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

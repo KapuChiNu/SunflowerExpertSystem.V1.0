@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Symptom Checker{% endblock %}
+
+{% block content %}
+<div class="py-2">
+  <div class="card shadow-sm border-0 sf-card">
+    <div class="card-header bg-body-tertiary border-0">
+      <h4 class="mb-0 fw-bold">Select symptoms</h4>
+      <div class="text-muted small">
+        Select all symptoms you observe, then click <b>Check Symptoms</b> to view the most likely disease report.
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form method="post" action="{{ url_for('main.diagnose_page') }}">
+        {{ form.hidden_tag() }}
+
+        <div class="row g-3">
+          {% for category, items in grouped_symptoms.items() %}
+            <div class="col-12">
+              <div class="fw-semibold mb-2">{{ category }} symptoms</div>
+              <div class="row g-2">
+                {% for s in items %}
+                  <div class="col-12 col-md-6 col-lg-4">
+                    <label class="sf-check-item">
+                      <input class="form-check-input m-0" type="checkbox" name="symptoms" value="{{ s.key }}" {% if s.key in selected %}checked{% endif %}>
+                      <span class="small fw-semibold">{{ s.label }}</span>
+                    </label>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          <button type="submit" class="btn btn-dark px-4">Check Symptoms</button>
+          <a href="{{ url_for('main.diagnose_page') }}" class="btn btn-outline-dark">Reset</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

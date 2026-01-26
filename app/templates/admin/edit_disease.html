@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ disease.name }} • Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">Edit disease</h1>
+    <div class="text-muted">{{ disease.name }} ({{ disease.slug }})</div>
+  </div>
+  <a class="btn btn-outline-dark" href="{{ url_for('admin.diseases') }}">Back</a>
+</div>
+
+<div class="card sf-card p-3 p-lg-4 rounded-4">
+  <form method="post" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+
+    <div class="row g-3">
+      <div class="col-lg-6">
+        <label class="form-label">{{ form.name.label.text }}</label>
+        {{ form.name(class="form-control") }}
+      </div>
+      <div class="col-lg-6">
+        <label class="form-label">{{ form.image.label.text }}</label>
+        {{ form.image(class="form-control") }}
+        <div class="small text-muted mt-1">Current: {{ disease.image_filename or "None" }}</div>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Symptom checklist</label>
+        <div class="row g-3">
+          <div class="col-lg-4">
+            <label class="form-label">{{ form.symptom_checklist_leaf.label.text }}</label>
+            {{ form.symptom_checklist_leaf(class="form-control", rows="6", placeholder="Yellow spots on leaves\nBrown leaf lesions\nWilting leaves") }}
+          </div>
+          <div class="col-lg-4">
+            <label class="form-label">{{ form.symptom_checklist_leaf_head.label.text }}</label>
+            {{ form.symptom_checklist_leaf_head(class="form-control", rows="6", placeholder="White fuzzy mold on head\nSoft rot at head\nLeaf and head discoloration") }}
+          </div>
+          <div class="col-lg-4">
+            <label class="form-label">{{ form.symptom_checklist_whole_plant.label.text }}</label>
+            {{ form.symptom_checklist_whole_plant(class="form-control", rows="6", placeholder="Wilting or drooping\nStunted growth\nWhole plant yellowing") }}
+          </div>
+
+          <div class="col-lg-4">
+            <label class="form-label">{{ form.symptom_checklist_stem.label.text }}</label>
+            {{ form.symptom_checklist_stem(class="form-control", rows="6", placeholder="Brown/black stem lesions\nSoft stem rot\nStem cracking") }}
+          </div>
+          <div class="col-lg-4">
+            <label class="form-label">{{ form.symptom_checklist_head.label.text }}</label>
+            {{ form.symptom_checklist_head(class="form-control", rows="6", placeholder="Rot on flower head\nWater-soaked head tissue\nHead discoloration") }}
+          </div>
+          <div class="col-lg-4">
+            <label class="form-label">{{ form.symptom_checklist_root.label.text }}</label>
+            {{ form.symptom_checklist_root(class="form-control", rows="6", placeholder="Root rot\nPoor root growth\nDarkened roots") }}
+          </div>
+
+          <div class="col-lg-4">
+            <label class="form-label">{{ form.symptom_checklist_environment.label.text }}</label>
+            {{ form.symptom_checklist_environment(class="form-control", rows="6", placeholder="Cool, wet conditions\nHigh humidity\nPoor drainage") }}
+            <div class="small text-muted mt-1">Use this for weather or field conditions (humidity, temperature, soil moisture).</div>
+          </div>
+        </div>
+        <div class="small text-muted mt-2">
+          One symptom per line. These lines create the checklist used by the symptom checker for this report.
+        </div>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">{{ form.symptoms.label.text }}</label>
+        {{ form.symptoms(class="form-control", rows="3") }}
+      </div>
+      <div class="col-12">
+        <label class="form-label">{{ form.cause.label.text }}</label>
+        {{ form.cause(class="form-control", rows="3") }}
+      </div>
+      <div class="col-12">
+        <label class="form-label">{{ form.treatment.label.text }}</label>
+        {{ form.treatment(class="form-control", rows="3") }}
+      </div>
+      <div class="col-12">
+        <label class="form-label">{{ form.prevention.label.text }}</label>
+        {{ form.prevention(class="form-control", rows="3") }}
+      </div>
+
+      <div class="col-12 d-flex gap-2">
+        {{ form.submit(class="btn btn-dark") }}
+        <a class="btn btn-outline-secondary" href="{{ url_for('main.disease_detail', slug=disease.slug) }}">View</a>
+      </div>
+    </div>
+  </form>
+  {% if current_user.has_permission("delete_diseases") %}
+
+  <hr class="my-4"/>
+
+  <form method="post" action="{{ url_for('admin.delete_disease', disease_id=disease.id) }}"
+        onsubmit="return confirm('Delete {{ disease.name }}? This cannot be undone.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <button type="submit" class="btn btn-outline-danger">Delete disease</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}
