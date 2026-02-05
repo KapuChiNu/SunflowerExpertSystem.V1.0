@@ -131,10 +131,49 @@
           <div class="sf-search-suggest" data-search-suggest aria-hidden="true"></div>
         </form>
 
+        {% set notif_items = notifications | default([]) %}
+        {% set notif_unread = notification_unread_count | default(0) %}
         <div class="sf-top-actions">
-          <button class="sf-icon-btn" type="button" aria-label="Notifications" title="Notifications">
-            <i class="bi bi-bell" aria-hidden="true"></i>
-          </button>
+          <div class="sf-notif" data-notifications>
+            <button class="sf-icon-btn" type="button" data-action="toggleNotifications" aria-label="Notifications" title="Notifications" aria-haspopup="true" aria-expanded="false" aria-controls="sf-notif-panel">
+              <i class="bi bi-bell" aria-hidden="true"></i>
+              {% if notif_unread > 0 %}
+                <span class="sf-notif-badge">{{ "99+" if notif_unread > 99 else notif_unread }}</span>
+              {% endif %}
+            </button>
+            <div class="sf-notif-panel" id="sf-notif-panel" aria-hidden="true">
+              <div class="sf-notif-head">
+                <div class="sf-notif-title">Notifications</div>
+                {% if notif_unread > 0 %}
+                  <form method="post" action="{{ url_for('user.mark_notifications_read') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button class="sf-notif-clear" type="submit">Mark all read</button>
+                  </form>
+                {% endif %}
+              </div>
+              <div class="sf-notif-list">
+                {% if notif_items %}
+                  {% for n in notif_items %}
+                    {% if n.link %}
+                      <a class="sf-notif-item {% if not n.is_read %}is-unread{% endif %}" href="{{ n.link }}">
+                        <div class="sf-notif-item-title">{{ n.title }}</div>
+                        {% if n.body %}<div class="sf-notif-item-body">{{ n.body }}</div>{% endif %}
+                        <div class="sf-notif-item-time">{{ n.created_at.strftime("%b %d, %Y %H:%M") }}</div>
+                      </a>
+                    {% else %}
+                      <div class="sf-notif-item {% if not n.is_read %}is-unread{% endif %}">
+                        <div class="sf-notif-item-title">{{ n.title }}</div>
+                        {% if n.body %}<div class="sf-notif-item-body">{{ n.body }}</div>{% endif %}
+                        <div class="sf-notif-item-time">{{ n.created_at.strftime("%b %d, %Y %H:%M") }}</div>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                  <div class="sf-notif-empty">No notifications yet.</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
           <a class="sf-primary-btn" href="{{ url_for('main.diagnose_page') }}">
             <i class="bi bi-plus-lg" aria-hidden="true"></i>
             New symptom check

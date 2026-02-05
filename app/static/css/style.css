@@ -430,6 +430,129 @@ html[data-theme="dark"] .sf-search-hint {
 .sf-userchip-name { font-weight: 800; line-height: 1.1; }
 .sf-userchip-role { color: var(--sf-muted); font-size: 0.82rem; font-weight: 700; }
 
+.sf-notif {
+  position: relative;
+}
+
+.sf-notif .sf-icon-btn {
+  position: relative;
+}
+
+.sf-notif-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--sf-accent);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+}
+
+html[data-theme="dark"] .sf-notif-badge {
+  border-color: var(--sf-surface);
+}
+
+.sf-notif-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  background: var(--sf-surface);
+  border: 1px solid var(--sf-border);
+  border-radius: 16px;
+  box-shadow: var(--sf-shadow);
+  padding: 10px;
+  z-index: 60;
+  display: none;
+}
+
+.sf-notif.is-open .sf-notif-panel {
+  display: block;
+}
+
+.sf-notif-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 6px 8px;
+}
+
+.sf-notif-title {
+  font-weight: 800;
+}
+
+.sf-notif-clear {
+  border: 0;
+  background: transparent;
+  color: var(--sf-accent-strong);
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 0;
+  cursor: pointer;
+}
+
+.sf-notif-list {
+  display: grid;
+  gap: 8px;
+  max-height: 320px;
+  overflow: auto;
+  padding: 2px;
+}
+
+.sf-notif-item {
+  display: block;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  padding: 8px 10px;
+  background: var(--sf-surface-strong);
+  color: var(--sf-text);
+}
+
+.sf-notif-item:hover {
+  border-color: rgba(31, 180, 118, 0.3);
+  background: rgba(31, 180, 118, 0.08);
+}
+
+.sf-notif-item.is-unread {
+  border-color: rgba(31, 180, 118, 0.45);
+  background: rgba(31, 180, 118, 0.12);
+}
+
+.sf-notif-item-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.sf-notif-item-body {
+  color: var(--sf-muted);
+  font-size: 0.82rem;
+  margin-top: 2px;
+}
+
+.sf-notif-item-time {
+  color: var(--sf-muted);
+  font-size: 0.72rem;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sf-notif-empty {
+  padding: 12px;
+  color: var(--sf-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
 /* ------------------------------
    Cards / Components
 ------------------------------ */

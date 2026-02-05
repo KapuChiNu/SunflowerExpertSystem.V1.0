@@ -1,8 +1,9 @@
 import json
 import os
+from datetime import datetime
 
 from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
-from flask_login import login_required
+from flask_login import current_user, login_required
 
 from extensions import db
 from app.forms import DiseaseEditForm
@@ -15,6 +16,7 @@ from app.services.disease_helpers import (
     slugify,
     unique_slug,
 )
+from app.services.notifications import create_notification, notify_admins
 from app.utils import permission_required
 
 
@@ -122,6 +124,10 @@ def new_disease():
             cause=form.cause.data.strip(),
             treatment=form.treatment.data.strip(),
             prevention=form.prevention.data.strip(),
+            created_by_id=current_user.id,
+            updated_by_id=current_user.id,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
         )
 
         checklist_items = build_checklist_from_sections(
@@ -150,6 +156,21 @@ def new_disease():
 
         db.session.add(disease)
         db.session.commit()
+
+        note_body = f"Created report for {disease.name} with {len(checklist_items)} checklist item(s)."
+        notify_admins(
+            title="New disease report",
+            body=note_body,
+            link=url_for("doctor.edit_disease", disease_id=disease.id),
+        )
+        if not current_user.is_admin:
+            create_notification(
+                user_id=current_user.id,
+                title="Symptoms added",
+                body=note_body,
+                link=url_for("doctor.edit_disease", disease_id=disease.id),
+            )
+
         flash("Disease created.", "success")
         return redirect(url_for("doctor.diseases"))
 
@@ -174,11 +195,17 @@ def edit_disease(disease_id: int):
         form.symptom_checklist_environment.data = sections["environment"]
 
     if form.validate_on_submit():
+        old_symptoms = (disease.symptoms or "").strip()
+        old_checklist = disease.checklist_items()
+
         disease.name = form.name.data.strip()
-        disease.symptoms = form.symptoms.data.strip()
+        new_symptoms = form.symptoms.data.strip()
+        disease.symptoms = new_symptoms
         disease.cause = form.cause.data.strip()
         disease.treatment = form.treatment.data.strip()
         disease.prevention = form.prevention.data.strip()
+        disease.updated_by_id = current_user.id
+        disease.updated_at = datetime.utcnow()
 
         checklist_items = build_checklist_from_sections(
             form.symptom_checklist_leaf.data,
@@ -208,6 +235,24 @@ def edit_disease(disease_id: int):
                 )
 
         db.session.commit()
+
+        symptoms_changed = old_symptoms != new_symptoms
+        checklist_changed = old_checklist != checklist_items
+        if symptoms_changed or checklist_changed:
+            note_body = f"Updated symptoms for {disease.name}."
+            notify_admins(
+                title="Disease symptoms updated",
+                body=note_body,
+                link=url_for("doctor.edit_disease", disease_id=disease.id),
+            )
+            if not current_user.is_admin:
+                create_notification(
+                    user_id=current_user.id,
+                    title="Symptoms updated",
+                    body=note_body,
+                    link=url_for("doctor.edit_disease", disease_id=disease.id),
+                )
+
         flash("Disease updated.", "success")
         return redirect(url_for("doctor.diseases"))
 

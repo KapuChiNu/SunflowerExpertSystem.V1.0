@@ -34,6 +34,24 @@
     body.classList.toggle('sf-sidebar-open');
   }
 
+  // ----- Notifications -----
+  const notifWrap = document.querySelector('[data-notifications]');
+  const notifPanel = notifWrap?.querySelector('.sf-notif-panel');
+  const notifBtn = notifWrap?.querySelector('[data-action="toggleNotifications"]');
+  let notifOpen = false;
+
+  function setNotifOpen(open) {
+    if (!notifWrap || !notifPanel || !notifBtn) return;
+    notifOpen = open;
+    notifWrap.classList.toggle('is-open', open);
+    notifPanel.setAttribute('aria-hidden', open ? 'false' : 'true');
+    notifBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  function toggleNotifications() {
+    setNotifOpen(!notifOpen);
+  }
+
   // ----- Events -----
   document.addEventListener('click', (e) => {
     const t = e.target;
@@ -41,9 +59,18 @@
 
     const action = t.closest('[data-action]')?.getAttribute('data-action');
 
+    if (action !== 'toggleNotifications' && notifOpen && notifWrap && !notifWrap.contains(t)) {
+      setNotifOpen(false);
+    }
+
     if (action === 'toggleTheme') {
       const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
       applyTheme(current === 'dark' ? 'light' : 'dark');
+      return;
+    }
+
+    if (action === 'toggleNotifications') {
+      toggleNotifications();
       return;
     }
 
@@ -55,6 +82,7 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeSidebar();
+      setNotifOpen(false);
     }
   });
 

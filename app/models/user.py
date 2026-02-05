@@ -31,6 +31,9 @@ class User(UserMixin, db.Model):
     feedback_items = db.relationship(
         "Feedback", back_populates="user", cascade="all, delete-orphan"
     )
+    notifications = db.relationship(
+        "Notification", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)

@@ -25,4 +25,16 @@ def ensure_schema_columns() -> None:
             text("ALTER TABLE diseases ADD COLUMN symptom_checklist_json TEXT DEFAULT '[]'")
         )
 
+    if "created_by_id" not in existing:
+        db.session.execute(text("ALTER TABLE diseases ADD COLUMN created_by_id INTEGER"))
+
+    if "updated_by_id" not in existing:
+        db.session.execute(text("ALTER TABLE diseases ADD COLUMN updated_by_id INTEGER"))
+
+    if "created_at" not in existing:
+        db.session.execute(text("ALTER TABLE diseases ADD COLUMN created_at DATETIME"))
+
+    if "updated_at" not in existing:
+        db.session.execute(text("ALTER TABLE diseases ADD COLUMN updated_at DATETIME"))
+
     db.session.commit()

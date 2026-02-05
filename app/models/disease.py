@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from extensions import db
 
@@ -15,9 +16,19 @@ class Disease(db.Model):
     prevention = db.Column(db.Text, nullable=False)
     image_filename = db.Column(db.String(200), nullable=True)
 
+    created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
+    updated_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=True)
+    updated_at = db.Column(
+        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True
+    )
+
     # Symptom checklist stored directly on the disease (no extra tables).
     # JSON list, e.g. [{"key":"yellow_spots_leaves","label":"Yellow spots on leaves","category":"Leaf"}, ...]
     symptom_checklist_json = db.Column(db.Text, nullable=True, default="[]")
+
+    created_by = db.relationship("User", foreign_keys=[created_by_id], lazy="joined")
+    updated_by = db.relationship("User", foreign_keys=[updated_by_id], lazy="joined")
 
     def checklist_items(self) -> list[dict]:
         try:

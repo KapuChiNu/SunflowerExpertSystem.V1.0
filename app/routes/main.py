@@ -11,6 +11,7 @@ from app.models.symptom_check import SymptomCheck, SymptomCheckResult, SymptomCh
 from app.utils import permission_required
 
 from app.services.diagnosis_db import diagnose, symptoms_grouped, symptom_index
+from app.services.notifications import create_notification, notify_admins
 
 main_bp = Blueprint("main", __name__)
 
@@ -211,6 +212,27 @@ def diagnose_page():
                 )
 
             db.session.commit()
+
+            if current_user.has_permission("manage_diseases"):
+                note_link = None
+                if current_user.has_permission("view_symptom_checks"):
+                    note_link = url_for("doctor.symptom_check_detail", check_id=check.id)
+
+                top_label = check.top_disease_name or "No strong match"
+                note_body = f"Top match: {top_label}. Selected {len(valid_selected)} symptom(s)."
+
+                notify_admins(
+                    title="Doctor symptom check",
+                    body=note_body,
+                    link=note_link,
+                )
+                if not current_user.is_admin:
+                    create_notification(
+                        user_id=current_user.id,
+                        title="Symptom check completed",
+                        body=note_body,
+                        link=note_link,
+                    )
         except Exception:
             db.session.rollback()
             current_app.logger.exception("Failed to log symptom checker event")

@@ -1,8 +1,9 @@
 import json
 import os
+from datetime import datetime
 
 from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
-from flask_login import login_required
+from flask_login import current_user, login_required
 
 from extensions import db
 from app.utils import permission_required
@@ -92,6 +93,10 @@ def new_disease():
             cause=form.cause.data.strip(),
             treatment=form.treatment.data.strip(),
             prevention=form.prevention.data.strip(),
+            created_by_id=current_user.id,
+            updated_by_id=current_user.id,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
         )
 
         # Store checklist directly on the disease (no extra tables)
@@ -150,6 +155,8 @@ def edit_disease(disease_id: int):
         disease.cause = form.cause.data.strip()
         disease.treatment = form.treatment.data.strip()
         disease.prevention = form.prevention.data.strip()
+        disease.updated_by_id = current_user.id
+        disease.updated_at = datetime.utcnow()
 
         # Update symptom checklist stored directly on the disease
         checklist_items = build_checklist_from_sections(
