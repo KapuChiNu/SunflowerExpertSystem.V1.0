@@ -6,6 +6,7 @@ import re
 from app.services.disease_helpers import keyify
 
 DEFAULT_CATEGORY = "General"
+SYNC_DEFAULT_CATEGORY = "Environment"
 
 _CATEGORY_CANONICAL = {
     "leaf": "Leaf",
@@ -83,8 +84,103 @@ def disease_items(disease) -> list[dict]:
     return _unique_keyed_items(_normalize_items(disease.checklist_items() or []))
 
 
+def checklist_to_symptoms_text(items: list[dict]) -> str:
+    normalized = _unique_keyed_items(_normalize_items(items))
+    lines: list[str] = []
+    for item in normalized:
+        label = (item.get("label") or "").strip()
+        category = canonical_category(item.get("category") or SYNC_DEFAULT_CATEGORY)
+        if not label:
+            continue
+        if _norm(category) == _norm(DEFAULT_CATEGORY):
+            category = SYNC_DEFAULT_CATEGORY
+        lines.append(f"{category}: {label}")
+    return "\n".join(lines)
+
+
+def parse_symptoms_text_to_items(
+    text: str,
+    *,
+    default_category: str = SYNC_DEFAULT_CATEGORY,
+) -> list[dict]:
+    rows: list[dict] = []
+    seen_pairs: set[tuple[str, str]] = set()
+
+    for raw in (text or "").splitlines():
+        line = str(raw or "").strip()
+        if not line:
+            continue
+        line = re.sub(r"^[-*•\s]+", "", line).strip()
+        if not line:
+            continue
+
+        category = default_category
+        label = line
+        if ":" in line:
+            left, right = line.split(":", 1)
+            left = (left or "").strip()
+            right = (right or "").strip()
+            if right:
+                label = right
+                category = canonical_category(left or default_category)
+
+        category = canonical_category(category or default_category)
+        if _norm(category) == _norm(DEFAULT_CATEGORY):
+            category = default_category
+
+        label = (label or "").strip()
+        if not label:
+            continue
+
+        pair = (_norm(category), _norm(label))
+        if pair in seen_pairs:
+            continue
+        seen_pairs.add(pair)
+        rows.append({"key": keyify(label), "label": label, "category": category})
+
+    if not rows and (text or "").strip():
+        # Keep a non-empty fallback so symptoms text and checklist never diverge.
+        fallback = re.sub(r"\s+", " ", (text or "").strip())
+        if fallback:
+            cat = canonical_category(default_category or SYNC_DEFAULT_CATEGORY)
+            rows.append({"key": keyify(fallback), "label": fallback, "category": cat})
+
+    return _unique_keyed_items(_normalize_items(rows))
+
+
 def save_disease_items(disease, items: list[dict]) -> None:
-    disease.symptom_checklist_json = json.dumps(_unique_keyed_items(_normalize_items(items)))
+    normalized_raw = _unique_keyed_items(_normalize_items(items))
+    normalized: list[dict] = []
+    for item in normalized_raw:
+        label = (item.get("label") or "").strip()
+        key = (item.get("key") or "").strip() or keyify(label)
+        category = canonical_category(item.get("category") or SYNC_DEFAULT_CATEGORY)
+        if _norm(category) == _norm(DEFAULT_CATEGORY):
+            category = SYNC_DEFAULT_CATEGORY
+        if not label:
+            continue
+        normalized.append({"key": key, "label": label, "category": category})
+
+    disease.symptom_checklist_json = json.dumps(normalized)
+    disease.symptoms = checklist_to_symptoms_text(normalized)
+
+
+def sync_disease_symptom_data(disease) -> bool:
+    old_json = disease.symptom_checklist_json or ""
+    old_symptoms = disease.symptoms or ""
+
+    existing = disease_items(disease)
+    if existing:
+        save_disease_items(disease, existing)
+        return (disease.symptom_checklist_json or "") != old_json or (
+            disease.symptoms or ""
+        ) != old_symptoms
+
+    parsed = parse_symptoms_text_to_items(disease.symptoms or "")
+    if not parsed:
+        return False
+    save_disease_items(disease, parsed)
+    return (disease.symptom_checklist_json or "") != old_json or (disease.symptoms or "") != old_symptoms
 
 
 def add_symptom_to_disease(disease, *, label: str, category: str) -> bool:

@@ -5,7 +5,7 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
   <div>
     <h1 class="h3 mb-1">My profile</h1>
-    <div class="text-muted">Update your username, email, or password.</div>
+    <div class="text-muted">Update your username or password.</div>
   </div>
   <a class="btn btn-outline-dark" href="{{ url_for('main.home') }}">Back to Diseases</a>
 </div>
@@ -22,14 +22,6 @@
       {% endfor %}
     </div>
 
-    <div class="mb-3">
-      {{ form.email.label(class_="form-label") }}
-      {{ form.email(class_="form-control", placeholder="you@example.com") }}
-      {% for e in form.email.errors %}
-        <div class="text-danger small">{{ e }}</div>
-      {% endfor %}
-    </div>
-
     <hr class="my-4"/>
 
     <div class="mb-3">
@@ -38,7 +30,7 @@
       {% for e in form.current_password.errors %}
         <div class="text-danger small">{{ e }}</div>
       {% endfor %}
-      <div class="form-text">Leave blank if you are not changing your password.</div>
+      <div class="form-text">Required if you change username or password.</div>
     </div>
 
     <div class="mb-3">

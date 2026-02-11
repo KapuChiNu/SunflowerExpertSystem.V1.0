@@ -11,7 +11,7 @@
 </div>
 
 <div class="card sf-card p-3 p-lg-4 rounded-4">
-  <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data" data-symptoms-builder>
     {{ form.hidden_tag() }}
 
     <div class="row g-3">
@@ -28,6 +28,38 @@
       <div class="col-12">
         <label class="form-label">{{ form.symptoms.label.text }}</label>
         {{ form.symptoms(class="form-control", rows="3") }}
+        <div class="row g-2 mt-1" data-symptom-builder>
+          <div class="col-md-7">
+            <input
+              type="text"
+              class="form-control"
+              list="admin-symptom-options"
+              placeholder="Symptom label"
+              data-symptom-builder-input
+            />
+            <datalist id="admin-symptom-options">
+              {% for s in available_symptoms or [] %}
+                <option value="{{ s.label }}">{{ s.category }}</option>
+              {% endfor %}
+            </datalist>
+          </div>
+          <div class="col-md-3">
+            <select class="form-select" data-symptom-builder-category>
+              <option value="Leaf">Leaf</option>
+              <option value="Leaf / Head">Leaf / Head</option>
+              <option value="Whole plant">Whole plant</option>
+              <option value="Stem">Stem</option>
+              <option value="Head">Head</option>
+              <option value="Root">Root</option>
+              <option value="Seed / Seedling">Seed / Seedling</option>
+              <option value="Environment">Environment</option>
+            </select>
+          </div>
+          <div class="col-md-2 d-grid">
+            <button type="button" class="btn btn-outline-dark" data-symptom-builder-add>Add symptom</button>
+          </div>
+          <div class="col-12 small text-muted">Add as <b>Type: Symptom label</b> (for example: <i>Leaf: Yellow spots</i>).</div>
+        </div>
       </div>
       <div class="col-12">
         <label class="form-label">{{ form.cause.label.text }}</label>

@@ -35,7 +35,7 @@ def create_app():
     # Create tables + seed sample data on first run
     with app.app_context():
         # Import models so SQLAlchemy registers them before create_all()
-        from app.models import disease, feedback, rbac, symptom_check, user  # noqa: F401
+        from app.models import disease, feedback, rbac, symptom_check, translation_cache, user  # noqa: F401
         from app.services.schema_guard import ensure_schema_columns
         from app.services.seed import seed_if_empty
 

@@ -29,26 +29,26 @@ def profile():
 
     if form.validate_on_submit():
         new_username = form.username.data.strip()
-        new_email = form.email.data.strip().lower()
+        username_changed = new_username != (current_user.username or "")
+        changing_password = bool(form.new_password.data)
+        requires_current_password = username_changed or changing_password
+
+        if requires_current_password and not form.current_password.data:
+            flash("Current password is required to change username or password.", "danger")
+            return render_template("user/profile.html", form=form)
+        if requires_current_password and not current_user.check_password(form.current_password.data):
+            flash("Current password is incorrect.", "danger")
+            return render_template("user/profile.html", form=form)
 
         # Unique checks (excluding myself)
         if User.query.filter(User.username == new_username, User.id != current_user.id).first():
             flash("Username already taken.", "danger")
             return render_template("user/profile.html", form=form)
-        if User.query.filter(User.email == new_email, User.id != current_user.id).first():
-            flash("Email already registered.", "danger")
-            return render_template("user/profile.html", form=form)
 
         current_user.username = new_username
-        current_user.email = new_email
 
         # Optional password change
-        if form.new_password.data:
-            if not form.current_password.data or not current_user.check_password(
-                form.current_password.data
-            ):
-                flash("Current password is incorrect.", "danger")
-                return render_template("user/profile.html", form=form)
+        if changing_password:
             current_user.set_password(form.new_password.data)
 
         db.session.commit()

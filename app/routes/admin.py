@@ -25,6 +25,9 @@ from app.services.symptom_admin import (
     collect_all_symptoms,
     delete_symptom_globally,
     edit_symptom_globally,
+    parse_symptoms_text_to_items,
+    save_disease_items,
+    sync_disease_symptom_data,
 )
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -77,6 +80,12 @@ def resolve_feedback(feedback_id: int):
 @permission_required("manage_diseases")
 def diseases():
     diseases = Disease.query.order_by(Disease.name.asc()).all()
+    changed = False
+    for disease in diseases:
+        if sync_disease_symptom_data(disease):
+            changed = True
+    if changed:
+        db.session.commit()
     return render_template("admin/diseases.html", diseases=diseases)
 
 
@@ -86,15 +95,17 @@ def diseases():
 def new_disease():
     form = DiseaseEditForm()
     form.submit.label.text = "Create disease"
+    available_symptoms = collect_all_symptoms(Disease.query.order_by(Disease.name.asc()).all())
 
     if form.validate_on_submit():
         name = form.name.data.strip()
+        symptoms_text = form.symptoms.data.strip()
         slug = unique_slug(Disease, slugify(name))
 
         disease = Disease(
             slug=slug,
             name=name,
-            symptoms=form.symptoms.data.strip(),
+            symptoms=symptoms_text,
             cause=form.cause.data.strip(),
             treatment=form.treatment.data.strip(),
             prevention=form.prevention.data.strip(),
@@ -103,6 +114,8 @@ def new_disease():
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
+        parsed_items = parse_symptoms_text_to_items(symptoms_text)
+        save_disease_items(disease, parsed_items)
 
         if form.image.data:
             images_dir = os.path.join(current_app.root_path, "static", "images")
@@ -115,14 +128,22 @@ def new_disease():
                 disease.image_filename = stored
             except ValueError:
                 flash("Image must be PNG/JPG/WEBP.", "danger")
-                return render_template("admin/new_disease.html", form=form)
+                return render_template(
+                    "admin/new_disease.html",
+                    form=form,
+                    available_symptoms=available_symptoms,
+                )
 
         db.session.add(disease)
         db.session.commit()
         flash("Disease created. Now add symptom checklist items.", "success")
         return redirect(url_for("admin.edit_checklist", disease_id=disease.id))
 
-    return render_template("admin/new_disease.html", form=form)
+    return render_template(
+        "admin/new_disease.html",
+        form=form,
+        available_symptoms=available_symptoms,
+    )
 
 
 @admin_bp.route("/disease/<int:disease_id>/edit", methods=["GET", "POST"])
@@ -134,7 +155,9 @@ def edit_disease(disease_id: int):
 
     if form.validate_on_submit():
         disease.name = form.name.data.strip()
-        disease.symptoms = form.symptoms.data.strip()
+        symptoms_text = form.symptoms.data.strip()
+        parsed_items = parse_symptoms_text_to_items(symptoms_text)
+        save_disease_items(disease, parsed_items)
         disease.cause = form.cause.data.strip()
         disease.treatment = form.treatment.data.strip()
         disease.prevention = form.prevention.data.strip()
@@ -352,7 +375,7 @@ def edit_checklist(disease_id: int):
             environment_text=form.symptom_checklist_environment.data,
             seedling_text=form.symptom_checklist_seedling.data,
         )
-        disease.symptom_checklist_json = json.dumps(checklist_items)
+        save_disease_items(disease, checklist_items)
         disease.updated_by_id = current_user.id
         disease.updated_at = datetime.utcnow()
         db.session.commit()
@@ -447,7 +470,6 @@ def edit_user(user_id: int):
 def roles():
     form = RoleCreateForm()
     permissions = Permission.query.order_by(Permission.name.asc()).all()
-    form.permissions.choices = [(p.id, p.name) for p in permissions]
 
     if form.validate_on_submit():
         name = form.name.data.strip().lower()
@@ -464,13 +486,11 @@ def roles():
             )
 
         role = Role(name=name, description=description)
-        if form.permissions.data:
-            role.permissions = Permission.query.filter(Permission.id.in_(form.permissions.data)).all()
 
         db.session.add(role)
         db.session.commit()
-        flash("Role created.", "success")
-        return redirect(url_for("admin.roles"))
+        flash("Role created. Now assign permissions.", "success")
+        return redirect(url_for("admin.roles", tab="permissions", role=role.id))
 
     roles = Role.query.order_by(Role.name.asc()).all()
     return render_template(
@@ -505,8 +525,8 @@ def update_role_permissions(role_id: int):
 def delete_role(role_id: int):
     role = Role.query.get_or_404(role_id)
 
-    if role.name in {"admin", "user", "doctor"}:
-        flash("Core roles cannot be deleted.", "warning")
+    if (role.name or "").strip().lower() == "admin":
+        flash("Admin role cannot be deleted.", "warning")
         return redirect(url_for("admin.roles", tab="permissions"))
 
     in_use = (

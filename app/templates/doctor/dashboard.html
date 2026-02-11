@@ -11,7 +11,7 @@
     <a class="btn btn-outline-dark" href="{{ url_for('doctor.diseases') }}">Disease center</a>
     <a class="btn btn-outline-dark" href="{{ url_for('doctor.feedback') }}">Feedback inbox</a>
     {% if current_user.has_permission('view_symptom_checks') %}
-    <a class="btn btn-outline-primary" href="{{ url_for('doctor.symptom_checks') }}">Symptom logs</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('doctor.symptom_checks') }}">Symptom History</a>
     {% endif %}
     {% if current_user.has_permission('access_admin') %}
     <a class="btn btn-outline-primary" href="{{ url_for('admin.dashboard') }}">Admin dashboard</a>

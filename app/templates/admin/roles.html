@@ -6,6 +6,7 @@
 {% if active_tab not in ["create", "permissions"] %}
   {% set active_tab = "create" %}
 {% endif %}
+{% set focus_role_id = (request.args.get("role") or "0")|int %}
 
 <div class="mb-3">
   <h1 class="h3 mb-1">Roles</h1>
@@ -44,32 +45,18 @@
         {% endfor %}
       </div>
 
-      <div class="mb-3">
-        {{ form.permissions.label(class_="form-label") }}
-        <div class="d-flex flex-wrap gap-2">
-          {% for p in form.permissions %}
-            <div class="form-check">
-              {{ p(class_="form-check-input") }}
-              {{ p.label(class_="form-check-label") }}
-            </div>
-          {% endfor %}
-        </div>
-        {% for e in form.permissions.errors %}
-          <div class="text-danger small">{{ e }}</div>
-        {% endfor %}
-      </div>
-
       {{ form.submit(class_="btn btn-dark") }}
     </form>
   </div>
 {% else %}
   <div class="card sf-card p-3 rounded-4">
     <h2 class="h5 mb-3">Edit permission</h2>
+    <div class="small text-muted mb-3">Select permissions for each role, then click Save permissions.</div>
     {% if roles %}
       <div class="row g-3">
         {% for role in roles %}
           <div class="col-12">
-            <div class="border rounded-3 p-3">
+            <div id="role-{{ role.id }}" class="border rounded-3 p-3 {% if focus_role_id == role.id %}border-success border-2{% endif %}">
               <div class="fw-semibold">{{ role.name }}</div>
               <div class="small text-muted mb-2">{{ role.description or "-" }}</div>
               <form method="post" action="{{ url_for('admin.update_role_permissions', role_id=role.id) }}">
@@ -96,6 +83,17 @@
                   <button type="submit" class="btn btn-sm btn-outline-primary">Save permissions</button>
                 </div>
               </form>
+              {% if role.name|lower != 'admin' %}
+                <form
+                  method="post"
+                  action="{{ url_for('admin.delete_role', role_id=role.id) }}"
+                  class="mt-2"
+                  onsubmit="return confirm('Delete role {{ role.name }}?');"
+                >
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                  <button type="submit" class="btn btn-sm btn-outline-danger">Delete role</button>
+                </form>
+              {% endif %}
             </div>
           </div>
         {% endfor %}

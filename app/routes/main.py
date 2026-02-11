@@ -5,13 +5,14 @@ from uuid import uuid4
 from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required
 
-from extensions import db
+from extensions import csrf, db
 from app.forms import DiagnosisForm, FeedbackForm
 from app.models.disease import Disease
 from app.models.feedback import Feedback
 from app.models.symptom_check import SymptomCheck, SymptomCheckResult, SymptomCheckSymptom
 from app.utils import permission_required
 
+from app.services.auto_translate import translate_text_batch
 from app.services.diagnosis_db import diagnose, symptoms_grouped, symptom_index
 from app.services.disease_helpers import save_uploaded_image
 
@@ -420,3 +421,29 @@ def search_suggest():
             break
 
     return jsonify(suggestions)
+
+
+@main_bp.route("/api/translate", methods=["POST"])
+@csrf.exempt
+def translate_api():
+    payload = request.get_json(silent=True) or {}
+    lang = (payload.get("lang") or "").strip().lower()
+    texts = payload.get("texts") or []
+
+    if lang != "km":
+        return jsonify({})
+    if not isinstance(texts, list):
+        return jsonify({}), 400
+
+    cleaned: list[str] = []
+    for value in texts:
+        if not isinstance(value, str):
+            continue
+        item = value.strip()
+        if not item:
+            continue
+        cleaned.append(item)
+        if len(cleaned) >= 60:
+            break
+
+    return jsonify(translate_text_batch(cleaned, target_lang="km"))

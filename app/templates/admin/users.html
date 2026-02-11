@@ -61,7 +61,7 @@
                       Clear history
                     </button>
                   </form>
-                  <form method="post" action="{{ url_for('admin.delete_user', user_id=u.id) }}" onsubmit="return confirm('Delete user {{ u.username }}? This will delete their symptom logs too.');">
+                  <form method="post" action="{{ url_for('admin.delete_user', user_id=u.id) }}" onsubmit="return confirm('Delete user {{ u.username }}? This will delete their symptom history too.');">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button type="submit" class="btn btn-sm btn-outline-danger" {% if current_user.id == u.id %}disabled{% endif %}>
                       Delete

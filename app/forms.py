@@ -1,14 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import (
-    FileField,
-    HiddenField,
-    PasswordField,
-    SelectField,
-    SelectMultipleField,
-    StringField,
-    SubmitField,
-    TextAreaField,
-)
+from wtforms import FileField, HiddenField, PasswordField, SelectField, StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, Regexp
 
 
@@ -86,10 +77,9 @@ class DiagnosisForm(FlaskForm):
 
 class ProfileForm(FlaskForm):
     username = StringField("Username", validators=[DataRequired(), Length(min=3, max=80)])
-    email = StringField("Email", validators=[DataRequired(), Email(), Length(max=120)])
 
     current_password = PasswordField(
-        "Current password (required to change password)", validators=[Optional()]
+        "Current password (required to change username or password)", validators=[Optional()]
     )
     new_password = PasswordField(
         "New password", validators=[Optional(), Length(min=6, max=128)]
@@ -119,7 +109,6 @@ class RoleCreateForm(FlaskForm):
         ],
     )
     description = StringField("Description", validators=[Optional(), Length(max=255)])
-    permissions = SelectMultipleField("Permissions", choices=[], coerce=int, validators=[Optional()])
     submit = SubmitField("Create role")
 
 
