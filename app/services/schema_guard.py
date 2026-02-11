@@ -37,4 +37,12 @@ def ensure_schema_columns() -> None:
     if "updated_at" not in existing:
         db.session.execute(text("ALTER TABLE diseases ADD COLUMN updated_at DATETIME"))
 
+    feedback_existing = _sqlite_columns("feedback")
+
+    if "symptom_check_id" not in feedback_existing:
+        db.session.execute(text("ALTER TABLE feedback ADD COLUMN symptom_check_id INTEGER"))
+
+    if "photo_filename" not in feedback_existing:
+        db.session.execute(text("ALTER TABLE feedback ADD COLUMN photo_filename VARCHAR(220)"))
+
     db.session.commit()

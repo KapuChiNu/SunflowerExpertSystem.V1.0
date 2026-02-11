@@ -2,6 +2,10 @@
 {% block title %}Symptom Checker{% endblock %}
 
 {% block content %}
+{% set ns = namespace(total=0) %}
+{% for _, items in grouped_symptoms.items() %}
+  {% set ns.total = ns.total + (items|length) %}
+{% endfor %}
 <div class="py-2">
   <div class="card shadow-sm border-0 sf-card">
     <div class="card-header bg-body-tertiary border-0">
@@ -12,18 +16,61 @@
     </div>
 
     <div class="card-body">
-      <form method="post" action="{{ url_for('main.diagnose_page') }}">
+      <form method="post" action="{{ url_for('main.diagnose_page') }}" data-diagnose-root>
         {{ form.hidden_tag() }}
+
+        <div class="sf-diagnose-tools mb-3">
+          <div class="sf-diagnose-search">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input
+              type="search"
+              class="form-control"
+              placeholder="Search symptoms (example: wilting, stem, root rot)"
+              autocomplete="off"
+              data-symptom-search
+            >
+          </div>
+          <label class="sf-diagnose-toggle">
+            <input type="checkbox" class="form-check-input m-0" data-symptom-selected-only>
+            <span>Selected only</span>
+          </label>
+          <button type="button" class="btn btn-outline-dark btn-sm" data-symptom-clear>Clear filters</button>
+          <div class="sf-diagnose-meta">
+            <span><b data-symptom-selected-count>{{ selected|length }}</b> selected</span>
+            <span><b data-symptom-visible-count>{{ ns.total }}</b> visible</span>
+          </div>
+        </div>
+
+        <div class="sf-symptom-filter-row mb-3">
+          <button type="button" class="sf-symptom-filter is-active" data-symptom-filter="all">
+            All categories ({{ ns.total }})
+          </button>
+          {% for category, items in grouped_symptoms.items() %}
+            {% set category_key = "cat_" ~ loop.index0 %}
+            <button type="button" class="sf-symptom-filter" data-symptom-filter="{{ category_key }}">
+              {{ category }} ({{ items|length }})
+            </button>
+          {% endfor %}
+        </div>
 
         <div class="row g-3">
           {% for category, items in grouped_symptoms.items() %}
-            <div class="col-12">
-              <div class="fw-semibold mb-2">{{ category }} symptoms</div>
+            {% set category_key = "cat_" ~ loop.index0 %}
+            <div class="col-12" data-symptom-section data-symptom-category="{{ category_key }}">
+              <div class="d-flex justify-content-between align-items-center mb-2 gap-2">
+                <div class="fw-semibold">{{ category }} symptoms</div>
+                <div class="small text-muted" data-symptom-section-count>{{ items|length }} shown</div>
+              </div>
               <div class="row g-2">
                 {% for s in items %}
-                  <div class="col-12 col-md-6 col-lg-4">
+                  <div
+                    class="col-12 col-md-6 col-lg-4"
+                    data-symptom-item
+                    data-symptom-label="{{ s.label|lower|e }}"
+                    data-symptom-category="{{ category_key }}"
+                  >
                     <label class="sf-check-item">
-                      <input class="form-check-input m-0" type="checkbox" name="symptoms" value="{{ s.key }}" {% if s.key in selected %}checked{% endif %}>
+                      <input class="form-check-input m-0" type="checkbox" name="symptoms" value="{{ s.key }}" {% if s.key in selected %}checked{% endif %} data-symptom-checkbox>
                       <span class="small fw-semibold">{{ s.label }}</span>
                     </label>
                   </div>
@@ -32,10 +79,17 @@
             </div>
           {% endfor %}
         </div>
+        <div class="sf-empty mt-3 d-none" data-symptom-empty>
+          <div class="sf-empty-title">No symptoms found</div>
+          <div class="sf-muted">Try a different keyword or clear filters.</div>
+        </div>
 
         <div class="d-flex flex-wrap gap-2 mt-4">
           <button type="submit" class="btn btn-dark px-4">Check Symptoms</button>
           <a href="{{ url_for('main.diagnose_page') }}" class="btn btn-outline-dark">Reset</a>
+        </div>
+        <div class="small text-muted mt-2">
+          If no disease match is found, we will ask you to report unmatched symptoms with a photo.
         </div>
       </form>
     </div>

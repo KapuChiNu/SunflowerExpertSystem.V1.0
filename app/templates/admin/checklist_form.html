@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Manage Symptoms • Admin{% endblock %}
+
+{% block content %}
+{% set symptom_sections = [
+  {"key": "leaf", "title": "1. Leaf", "field": form.symptom_checklist_leaf, "placeholder": "Yellow spots on leaves"},
+  {"key": "leaf_head", "title": "2. Leaf / Head", "field": form.symptom_checklist_leaf_head, "placeholder": "Leaf and head discoloration"},
+  {"key": "whole_plant", "title": "3. Whole plant", "field": form.symptom_checklist_whole_plant, "placeholder": "Whole plant wilting"},
+  {"key": "stem", "title": "4. Stem", "field": form.symptom_checklist_stem, "placeholder": "Stem lesions"},
+  {"key": "head", "title": "5. Head", "field": form.symptom_checklist_head, "placeholder": "Rotting flower head"},
+  {"key": "root", "title": "6. Root", "field": form.symptom_checklist_root, "placeholder": "Root rot"},
+  {"key": "seedling", "title": "7. Seed / Seedling", "field": form.symptom_checklist_seedling, "placeholder": "Poor germination"},
+  {"key": "environment", "title": "8. Environment", "field": form.symptom_checklist_environment, "placeholder": "High humidity"}
+] %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">Manage symptoms</h1>
+    <div class="text-muted">{{ disease.name }} ({{ disease.slug }})</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-dark" href="{{ url_for('admin.edit_disease', disease_id=disease.id) }}">Disease details</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin.checklists') }}">Symptoms list</a>
+  </div>
+</div>
+
+<div class="sf-tabs">
+  <a class="sf-tab is-active" href="{{ url_for('admin.checklists') }}">Manage symptoms</a>
+  <a class="sf-tab" href="{{ url_for('admin.all_symptoms') }}">All symptoms</a>
+</div>
+
+<div class="card sf-card p-3 p-lg-4 rounded-4">
+  <form method="post" data-symptom-manager>
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      <div class="form-label mb-2">8 symptom type buttons</div>
+      <div class="d-flex flex-wrap gap-2 sf-symptom-type-tabs" data-symptom-type-tabs>
+        {% for section in symptom_sections %}
+          <button
+            class="btn btn-sm btn-outline-dark sf-symptom-type-btn{% if loop.first %} is-active{% endif %}"
+            type="button"
+            data-symptom-type="{{ section.key }}"
+            data-symptom-title="{{ section.title }}"
+            data-symptom-placeholder="{{ section.placeholder }}"
+          >
+            <span>{{ section.title }}</span>
+            <span class="sf-symptom-type-count" data-symptom-tab-count="{{ section.key }}">0</span>
+          </button>
+        {% endfor %}
+      </div>
+      <div class="small text-muted mt-2">All symptoms are shown in one list below, divided into 8 types.</div>
+    </div>
+
+    <div class="sf-symptom-entry mb-3">
+      <div class="small text-muted mb-2">
+        Selected type:
+        <span class="fw-semibold text-body" data-symptom-active-label>{{ symptom_sections[0].title }}</span>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <input
+          class="form-control"
+          type="text"
+          placeholder="{{ symptom_sections[0].placeholder }}"
+          data-symptom-item-input
+        />
+        <button class="btn btn-dark" type="button" data-symptom-save>Add</button>
+        <button class="btn btn-outline-secondary d-none" type="button" data-symptom-cancel-edit>Cancel edit</button>
+      </div>
+      <div class="small text-muted mt-2">Press Enter to add. Use Edit/Delete in the list to update items.</div>
+    </div>
+
+    <div class="sf-symptom-master-list sf-symptom-entry">
+      <div class="small text-muted mb-2">
+        Total items: <span data-symptom-total-count>0</span>
+      </div>
+      <div data-symptom-master-list></div>
+      <div class="small text-muted d-none" data-symptom-empty>No symptom items yet.</div>
+    </div>
+
+    <div class="d-none">
+      {% for section in symptom_sections %}
+        {{ section.field(class="form-control", data_symptom_source="1", data_symptom_source_key=section.key) }}
+      {% endfor %}
+    </div>
+
+    <div class="mt-4 d-flex gap-2 flex-wrap">
+      {{ form.submit(class="btn btn-dark") }}
+      <a class="btn btn-outline-secondary" href="{{ url_for('admin.checklists') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

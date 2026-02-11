@@ -17,6 +17,12 @@
   </div>
 </div>
 
+<div class="sf-tabs">
+  <a class="sf-tab is-active" href="{{ url_for('doctor.diseases') }}">Manage diseases</a>
+  <a class="sf-tab" href="{{ url_for('doctor.checklists') }}">Manage symptoms</a>
+  <a class="sf-tab" href="{{ url_for('doctor.all_symptoms') }}">All symptoms</a>
+</div>
+
 <div class="row g-3">
   {% for d in diseases %}
     <div class="col-md-6 col-lg-4">
@@ -31,9 +37,10 @@
           Last updated by: {{ d.updated_by.username if d.updated_by else "Unknown" }}
           {% if d.updated_at %}• {{ d.updated_at.strftime("%Y-%m-%d %H:%M") }}{% endif %}
         </div>
+        <div class="text-muted small">Symptom checklist items: {{ d.checklist_items()|length }}</div>
         <div class="mt-3 d-inline-flex flex-wrap gap-2">
           <a class="btn btn-sm btn-success" href="{{ url_for('doctor.edit_disease', disease_id=d.id) }}">Edit</a>
-          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('main.disease_detail', slug=d.slug) }}">View</a>
+          <a class="btn btn-sm btn-dark" href="{{ url_for('doctor.edit_checklist', disease_id=d.id) }}">Manage symptoms</a>
 
           {% if current_user.has_permission("delete_diseases") %}
           <form method="post" action="{{ url_for('doctor.delete_disease', disease_id=d.id) }}"

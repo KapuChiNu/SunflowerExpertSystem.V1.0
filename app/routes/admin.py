@@ -7,10 +7,10 @@ from flask_login import current_user, login_required
 
 from extensions import db
 from app.utils import permission_required
-from app.forms import AdminUserEditForm, DiseaseEditForm
+from app.forms import AdminUserRoleForm, DiseaseEditForm, DiseaseSymptomsForm, RoleCreateForm
 from app.models.disease import Disease
 from app.models.feedback import Feedback
-from app.models.rbac import Role
+from app.models.rbac import Permission, Role
 from app.models.symptom_check import SymptomCheck
 from app.models.user import User
 from app.services.disease_helpers import (
@@ -20,9 +20,14 @@ from app.services.disease_helpers import (
     slugify,
     unique_slug,
 )
+from app.services.symptom_admin import (
+    add_symptom_to_disease,
+    collect_all_symptoms,
+    delete_symptom_globally,
+    edit_symptom_globally,
+)
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
-
 
 @admin_bp.route("/dashboard")
 @login_required
@@ -99,18 +104,6 @@ def new_disease():
             updated_at=datetime.utcnow(),
         )
 
-        # Store checklist directly on the disease (no extra tables)
-        checklist_items = build_checklist_from_sections(
-            form.symptom_checklist_leaf.data,
-            form.symptom_checklist_leaf_head.data,
-            form.symptom_checklist_whole_plant.data,
-            form.symptom_checklist_stem.data,
-            form.symptom_checklist_head.data,
-            form.symptom_checklist_root.data,
-            form.symptom_checklist_environment.data,
-        )
-        disease.symptom_checklist_json = json.dumps(checklist_items)
-
         if form.image.data:
             images_dir = os.path.join(current_app.root_path, "static", "images")
             try:
@@ -126,8 +119,8 @@ def new_disease():
 
         db.session.add(disease)
         db.session.commit()
-        flash("Disease created.", "success")
-        return redirect(url_for("admin.diseases"))
+        flash("Disease created. Now add symptom checklist items.", "success")
+        return redirect(url_for("admin.edit_checklist", disease_id=disease.id))
 
     return render_template("admin/new_disease.html", form=form)
 
@@ -139,16 +132,6 @@ def edit_disease(disease_id: int):
     disease = Disease.query.get_or_404(disease_id)
     form = DiseaseEditForm(obj=disease)
 
-    if request.method == "GET":
-        sections = split_checklist_sections(disease.checklist_items())
-        form.symptom_checklist_leaf.data = sections["leaf"]
-        form.symptom_checklist_leaf_head.data = sections["leaf_head"]
-        form.symptom_checklist_whole_plant.data = sections["whole_plant"]
-        form.symptom_checklist_stem.data = sections["stem"]
-        form.symptom_checklist_head.data = sections["head"]
-        form.symptom_checklist_root.data = sections["root"]
-        form.symptom_checklist_environment.data = sections["environment"]
-
     if form.validate_on_submit():
         disease.name = form.name.data.strip()
         disease.symptoms = form.symptoms.data.strip()
@@ -157,18 +140,6 @@ def edit_disease(disease_id: int):
         disease.prevention = form.prevention.data.strip()
         disease.updated_by_id = current_user.id
         disease.updated_at = datetime.utcnow()
-
-        # Update symptom checklist stored directly on the disease
-        checklist_items = build_checklist_from_sections(
-            form.symptom_checklist_leaf.data,
-            form.symptom_checklist_leaf_head.data,
-            form.symptom_checklist_whole_plant.data,
-            form.symptom_checklist_stem.data,
-            form.symptom_checklist_head.data,
-            form.symptom_checklist_root.data,
-            form.symptom_checklist_environment.data,
-        )
-        disease.symptom_checklist_json = json.dumps(checklist_items)
 
         # Optional image replacement
         if form.image.data:
@@ -190,6 +161,205 @@ def edit_disease(disease_id: int):
         return redirect(url_for("admin.diseases"))
 
     return render_template("admin/edit_disease.html", form=form, disease=disease)
+
+
+@admin_bp.route("/checklists")
+@login_required
+@permission_required("manage_diseases")
+def checklists():
+    diseases = Disease.query.order_by(Disease.name.asc()).all()
+    rows = []
+    for disease in diseases:
+        items = disease.checklist_items()
+        symptom_labels = []
+        for item in items:
+            if isinstance(item, dict):
+                label = (item.get("label") or "").strip()
+            else:
+                label = str(item).strip()
+            if label:
+                symptom_labels.append(label)
+
+        rows.append(
+            {
+                "disease": disease,
+                "symptom_labels": symptom_labels,
+                "item_count": len(symptom_labels),
+                "ready": bool(symptom_labels),
+            }
+        )
+
+    return render_template("admin/checklists.html", rows=rows)
+
+
+@admin_bp.route("/symptoms/all")
+@login_required
+@permission_required("manage_diseases")
+def all_symptoms():
+    diseases = Disease.query.order_by(Disease.name.asc()).all()
+    symptoms = collect_all_symptoms(diseases)
+
+    return render_template(
+        "admin/all_symptoms.html",
+        symptoms=symptoms,
+        diseases=diseases,
+    )
+
+
+@admin_bp.route("/symptoms/all/add", methods=["POST"])
+@login_required
+@permission_required("manage_diseases")
+def add_system_symptom():
+    disease_id = request.form.get("disease_id", type=int)
+    label = (request.form.get("label") or "").strip()
+    category = (request.form.get("category") or "").strip()
+
+    if not disease_id:
+        flash("Choose a disease before adding a symptom.", "warning")
+        return redirect(url_for("admin.all_symptoms"))
+    if not label:
+        flash("Symptom name is required.", "danger")
+        return redirect(url_for("admin.all_symptoms"))
+
+    disease = Disease.query.get_or_404(disease_id)
+    changed = add_symptom_to_disease(disease, label=label, category=category)
+    if changed:
+        disease.updated_by_id = current_user.id
+        disease.updated_at = datetime.utcnow()
+        db.session.commit()
+        flash(f'Added "{label}" to {disease.name}.', "success")
+    else:
+        db.session.rollback()
+        flash("This symptom already exists for the selected disease.", "info")
+
+    return redirect(url_for("admin.all_symptoms"))
+
+
+@admin_bp.route("/symptoms/all/edit", methods=["POST"])
+@login_required
+@permission_required("manage_diseases")
+def edit_system_symptom():
+    old_label = (request.form.get("old_label") or "").strip()
+    old_category = (request.form.get("old_category") or "").strip()
+    new_label = (request.form.get("new_label") or "").strip()
+    new_category = (request.form.get("new_category") or "").strip()
+
+    if not old_label or not old_category:
+        flash("Original symptom data is missing.", "danger")
+        return redirect(url_for("admin.all_symptoms"))
+    if not new_label:
+        flash("Updated symptom name is required.", "danger")
+        return redirect(url_for("admin.all_symptoms"))
+
+    diseases = Disease.query.order_by(Disease.name.asc()).all()
+    affected_diseases, affected_items, changed_ids = edit_symptom_globally(
+        diseases,
+        old_label=old_label,
+        old_category=old_category,
+        new_label=new_label,
+        new_category=new_category,
+    )
+    if affected_items:
+        now = datetime.utcnow()
+        for disease in diseases:
+            if disease.id in changed_ids:
+                disease.updated_by_id = current_user.id
+                disease.updated_at = now
+        db.session.commit()
+        flash(
+            f'Symptom updated in {affected_diseases} disease(s), {affected_items} item(s).',
+            "success",
+        )
+    else:
+        db.session.rollback()
+        flash("No matching symptom found to edit.", "warning")
+
+    return redirect(url_for("admin.all_symptoms"))
+
+
+@admin_bp.route("/symptoms/all/delete", methods=["POST"])
+@login_required
+@permission_required("manage_diseases")
+def delete_system_symptom():
+    label = (request.form.get("label") or "").strip()
+    category = (request.form.get("category") or "").strip()
+    if not label or not category:
+        flash("Symptom data is missing.", "danger")
+        return redirect(url_for("admin.all_symptoms"))
+
+    diseases = Disease.query.order_by(Disease.name.asc()).all()
+    affected_diseases, removed_items, changed_ids = delete_symptom_globally(
+        diseases,
+        label=label,
+        category=category,
+    )
+    if removed_items:
+        now = datetime.utcnow()
+        for disease in diseases:
+            if disease.id in changed_ids:
+                disease.updated_by_id = current_user.id
+                disease.updated_at = now
+        db.session.commit()
+        flash(
+            f'Symptom removed from {affected_diseases} disease(s), {removed_items} item(s).',
+            "info",
+        )
+    else:
+        db.session.rollback()
+        flash("No matching symptom found to delete.", "warning")
+
+    return redirect(url_for("admin.all_symptoms"))
+
+
+@admin_bp.route("/checklist/new", methods=["GET", "POST"])
+@login_required
+@permission_required("manage_diseases")
+def new_checklist():
+    disease_id = request.args.get("disease_id", type=int)
+    if disease_id:
+        return redirect(url_for("admin.edit_checklist", disease_id=disease_id))
+
+    flash("Choose a disease from the Manage Symptoms list.", "info")
+    return redirect(url_for("admin.checklists"))
+
+
+@admin_bp.route("/checklist/<int:disease_id>/edit", methods=["GET", "POST"])
+@login_required
+@permission_required("manage_diseases")
+def edit_checklist(disease_id: int):
+    disease = Disease.query.get_or_404(disease_id)
+    form = DiseaseSymptomsForm()
+
+    if request.method == "GET":
+        sections = split_checklist_sections(disease.checklist_items())
+        form.symptom_checklist_leaf.data = sections["leaf"]
+        form.symptom_checklist_leaf_head.data = sections["leaf_head"]
+        form.symptom_checklist_whole_plant.data = sections["whole_plant"]
+        form.symptom_checklist_stem.data = sections["stem"]
+        form.symptom_checklist_head.data = sections["head"]
+        form.symptom_checklist_root.data = sections["root"]
+        form.symptom_checklist_seedling.data = sections["seedling"]
+        form.symptom_checklist_environment.data = sections["environment"]
+
+    if form.validate_on_submit():
+        checklist_items = build_checklist_from_sections(
+            leaf_text=form.symptom_checklist_leaf.data,
+            leaf_head_text=form.symptom_checklist_leaf_head.data,
+            whole_plant_text=form.symptom_checklist_whole_plant.data,
+            stem_text=form.symptom_checklist_stem.data,
+            head_text=form.symptom_checklist_head.data,
+            root_text=form.symptom_checklist_root.data,
+            environment_text=form.symptom_checklist_environment.data,
+            seedling_text=form.symptom_checklist_seedling.data,
+        )
+        disease.symptom_checklist_json = json.dumps(checklist_items)
+        disease.updated_by_id = current_user.id
+        disease.updated_at = datetime.utcnow()
+        db.session.commit()
+        flash("Symptom checklist updated.", "success")
+        return redirect(url_for("admin.checklists"))
+
+    return render_template("admin/checklist_form.html", form=form, disease=disease)
 
 
 @admin_bp.route("/disease/<int:disease_id>/delete", methods=["POST"])
@@ -243,7 +413,7 @@ def users():
 def edit_user(user_id: int):
     u = User.query.get_or_404(user_id)
 
-    form = AdminUserEditForm(obj=u)
+    form = AdminUserRoleForm()
     roles = Role.query.order_by(Role.name.asc()).all()
     form.role.choices = [(r.name, r.name) for r in roles] or [
         ("user", "user"),
@@ -254,31 +424,103 @@ def edit_user(user_id: int):
         form.role.data = u.role
 
     if form.validate_on_submit():
-        new_username = form.username.data.strip()
-        new_email = form.email.data.strip().lower()
         new_role = form.role.data
 
-        if User.query.filter(User.username == new_username, User.id != u.id).first():
-            flash("Username already taken.", "danger")
-            return render_template("admin/edit_user.html", form=form, user=u)
-        if User.query.filter(User.email == new_email, User.id != u.id).first():
-            flash("Email already registered.", "danger")
+        if u.id == current_user.id and new_role != u.role:
+            flash("You cannot change your own role while logged in.", "warning")
             return render_template("admin/edit_user.html", form=form, user=u)
 
-        u.username = new_username
-        u.email = new_email
         u.role = new_role
         role_row = Role.query.filter_by(name=new_role).first()
         u.role_id = role_row.id if role_row else None
 
-        if form.new_password.data:
-            u.set_password(form.new_password.data)
-
         db.session.commit()
-        flash("User updated.", "success")
+        flash("User role updated.", "success")
         return redirect(url_for("admin.users"))
 
     return render_template("admin/edit_user.html", form=form, user=u)
+
+
+@admin_bp.route("/roles", methods=["GET", "POST"])
+@login_required
+@permission_required("manage_users")
+def roles():
+    form = RoleCreateForm()
+    permissions = Permission.query.order_by(Permission.name.asc()).all()
+    form.permissions.choices = [(p.id, p.name) for p in permissions]
+
+    if form.validate_on_submit():
+        name = form.name.data.strip().lower()
+        description = (form.description.data or "").strip() or None
+
+        existing = Role.query.filter_by(name=name).first()
+        if existing:
+            flash("Role name already exists.", "danger")
+            return render_template(
+                "admin/roles.html",
+                form=form,
+                roles=Role.query.order_by(Role.name.asc()).all(),
+                all_permissions=permissions,
+            )
+
+        role = Role(name=name, description=description)
+        if form.permissions.data:
+            role.permissions = Permission.query.filter(Permission.id.in_(form.permissions.data)).all()
+
+        db.session.add(role)
+        db.session.commit()
+        flash("Role created.", "success")
+        return redirect(url_for("admin.roles"))
+
+    roles = Role.query.order_by(Role.name.asc()).all()
+    return render_template(
+        "admin/roles.html",
+        form=form,
+        roles=roles,
+        all_permissions=permissions,
+    )
+
+
+@admin_bp.route("/roles/<int:role_id>/permissions", methods=["POST"])
+@login_required
+@permission_required("manage_users")
+def update_role_permissions(role_id: int):
+    role = Role.query.get_or_404(role_id)
+
+    raw_ids = request.form.getlist("permissions")
+    perm_ids = [int(pid) for pid in raw_ids if pid.isdigit()]
+    if perm_ids:
+        role.permissions = Permission.query.filter(Permission.id.in_(perm_ids)).all()
+    else:
+        role.permissions = []
+
+    db.session.commit()
+    flash("Role permissions updated.", "success")
+    return redirect(url_for("admin.roles", tab="permissions"))
+
+
+@admin_bp.route("/roles/<int:role_id>/delete", methods=["POST"])
+@login_required
+@permission_required("manage_users")
+def delete_role(role_id: int):
+    role = Role.query.get_or_404(role_id)
+
+    if role.name in {"admin", "user", "doctor"}:
+        flash("Core roles cannot be deleted.", "warning")
+        return redirect(url_for("admin.roles", tab="permissions"))
+
+    in_use = (
+        User.query.filter((User.role_id == role.id) | (User.role == role.name)).first()
+        is not None
+    )
+    if in_use:
+        flash("This role is assigned to users and cannot be deleted.", "danger")
+        return redirect(url_for("admin.roles", tab="permissions"))
+
+    db.session.delete(role)
+    db.session.commit()
+    flash("Role deleted.", "info")
+    return redirect(url_for("admin.roles", tab="permissions"))
 
 
 @admin_bp.route("/user/<int:user_id>/delete", methods=["POST"])

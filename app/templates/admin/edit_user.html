@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Edit User • Admin{% endblock %}
+{% block title %}Change Role • Admin{% endblock %}
 
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
   <div>
-    <h1 class="h3 mb-1">Edit user</h1>
-    <div class="text-muted">Update account information for <strong>{{ user.username }}</strong>.</div>
+    <h1 class="h3 mb-1">Change user role</h1>
+    <div class="text-muted">Update role assignment for <strong>{{ user.username }}</strong>.</div>
   </div>
   <a class="btn btn-outline-dark" href="{{ url_for('admin.users') }}">Back to users</a>
 </div>
@@ -16,19 +16,13 @@
 
     <div class="row g-3">
       <div class="col-md-6">
-        {{ form.username.label(class_="form-label") }}
-        {{ form.username(class_="form-control") }}
-        {% for e in form.username.errors %}
-          <div class="text-danger small">{{ e }}</div>
-        {% endfor %}
+        <label class="form-label">Username</label>
+        <div class="form-control-plaintext">{{ user.username }}</div>
       </div>
 
       <div class="col-md-6">
-        {{ form.email.label(class_="form-label") }}
-        {{ form.email(class_="form-control") }}
-        {% for e in form.email.errors %}
-          <div class="text-danger small">{{ e }}</div>
-        {% endfor %}
+        <label class="form-label">Email</label>
+        <div class="form-control-plaintext">{{ user.email }}</div>
       </div>
 
       <div class="col-md-6">
@@ -37,25 +31,7 @@
         {% for e in form.role.errors %}
           <div class="text-danger small">{{ e }}</div>
         {% endfor %}
-      </div>
-    </div>
-
-    <hr class="my-4"/>
-
-    <div class="row g-3">
-      <div class="col-md-6">
-        {{ form.new_password.label(class_="form-label") }}
-        {{ form.new_password(class_="form-control", placeholder="Leave blank to keep current password") }}
-        {% for e in form.new_password.errors %}
-          <div class="text-danger small">{{ e }}</div>
-        {% endfor %}
-      </div>
-      <div class="col-md-6">
-        {{ form.confirm_new_password.label(class_="form-label") }}
-        {{ form.confirm_new_password(class_="form-control") }}
-        {% for e in form.confirm_new_password.errors %}
-          <div class="text-danger small">{{ e }}</div>
-        {% endfor %}
+        <div class="text-muted small mt-1">Admins can change roles only.</div>
       </div>
     </div>
 

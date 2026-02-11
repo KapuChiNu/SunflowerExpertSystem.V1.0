@@ -19,6 +19,8 @@
             <th>User</th>
             <th>Subject</th>
             <th>Message</th>
+            <th>Symptom check</th>
+            <th>Photo evidence</th>
             <th>Status</th>
             <th>Sent</th>
             <th></th>
@@ -33,6 +35,20 @@
               </td>
               <td class="fw-semibold">{{ f.subject }}</td>
               <td class="sf-table-message" title="{{ f.message }}">{{ f.message }}</td>
+              <td>
+                {% if f.symptom_check_id %}
+                  <a class="btn btn-sm btn-outline-dark" href="{{ url_for('admin.symptom_check_detail', check_id=f.symptom_check_id) }}">Check #{{ f.symptom_check_id }}</a>
+                {% else %}
+                  <span class="text-muted small">None</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if f.photo_filename %}
+                  <a class="btn btn-sm btn-outline-primary" target="_blank" href="{{ url_for('static', filename='uploads/feedback/' + f.photo_filename) }}">View photo</a>
+                {% else %}
+                  <span class="text-muted small">None</span>
+                {% endif %}
+              </td>
               <td>
                 <span class="sf-status sf-status-{{ f.status }}">{{ f.status }}</span>
               </td>

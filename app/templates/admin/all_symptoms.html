@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}All Symptoms • Admin{% endblock %}
+
+{% block content %}
+{% set symptom_types = [
+  "Leaf",
+  "Leaf / Head",
+  "Whole plant",
+  "Stem",
+  "Head",
+  "Root",
+  "Seed / Seedling",
+  "Environment",
+  "General"
+] %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">All symptoms</h1>
+    <div class="text-muted">Complete symptom list from all diseases in the system.</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-dark" href="{{ url_for('admin.checklists') }}">Manage symptoms</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin.dashboard') }}">Admin dashboard</a>
+  </div>
+</div>
+
+<div class="sf-tabs">
+  <a class="sf-tab" href="{{ url_for('admin.checklists') }}">Manage symptoms</a>
+  <a class="sf-tab is-active" href="{{ url_for('admin.all_symptoms') }}">All symptoms</a>
+</div>
+
+<div class="card sf-card p-3 rounded-4 mb-3">
+  <h2 class="h6 mb-2">Add symptom</h2>
+  <form method="post" action="{{ url_for('admin.add_system_symptom') }}" class="row g-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <div class="col-lg-4">
+      <input class="form-control" type="text" name="label" placeholder="Symptom label" required/>
+    </div>
+    <div class="col-lg-3">
+      <select class="form-select" name="category" required>
+        {% for cat in symptom_types %}
+          <option value="{{ cat }}">{{ cat }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-lg-3">
+      <select class="form-select" name="disease_id" required>
+        <option value="">Select disease</option>
+        {% for d in diseases %}
+          <option value="{{ d.id }}">{{ d.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-lg-2 d-grid">
+      <button class="btn btn-dark" type="submit">Add symptom</button>
+    </div>
+  </form>
+  <div class="small text-muted mt-2">New symptom will be added to the selected disease.</div>
+</div>
+
+<div class="card sf-card p-3 rounded-4">
+  {% if symptoms %}
+    <div class="small text-muted mb-2">Total unique symptoms: {{ symptoms|length }}</div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Symptom</th>
+            <th>Used in</th>
+            <th>Diseases</th>
+            <th class="text-end">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in symptoms %}
+            <tr>
+              <td><span class="badge text-bg-secondary">{{ s.category }}</span></td>
+              <td class="fw-semibold">{{ s.label }}</td>
+              <td class="text-muted">{{ s.disease_count }} disease{{ '' if s.disease_count == 1 else 's' }}</td>
+              <td class="small">{{ s.disease_names|join(', ') }}</td>
+              <td class="text-end">
+                <details class="d-inline-block">
+                  <summary class="btn btn-sm btn-outline-dark">Edit</summary>
+                  <form method="post" action="{{ url_for('admin.edit_system_symptom') }}" class="mt-2 d-flex gap-2 flex-wrap justify-content-end">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="old_label" value="{{ s.label }}"/>
+                    <input type="hidden" name="old_category" value="{{ s.category }}"/>
+                    <input class="form-control form-control-sm" type="text" name="new_label" value="{{ s.label }}" required style="min-width: 220px;"/>
+                    <select class="form-select form-select-sm" name="new_category" style="min-width: 170px;" required>
+                      {% for cat in symptom_types %}
+                        <option value="{{ cat }}" {% if cat == s.category %}selected{% endif %}>{{ cat }}</option>
+                      {% endfor %}
+                    </select>
+                    <button class="btn btn-sm btn-success" type="submit">Save</button>
+                  </form>
+                </details>
+                <form method="post" action="{{ url_for('admin.delete_system_symptom') }}" class="d-inline-block ms-1" onsubmit="return confirm('Delete this symptom from all diseases?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                  <input type="hidden" name="label" value="{{ s.label }}"/>
+                  <input type="hidden" name="category" value="{{ s.category }}"/>
+                  <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="text-muted">No symptoms available yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

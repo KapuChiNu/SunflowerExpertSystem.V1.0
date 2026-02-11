@@ -121,7 +121,7 @@
   <div class="sf-card sf-kpi-card">
     <div class="sf-kpi-label">Needs review</div>
     <div class="sf-kpi-value">{{ pending_reports }}</div>
-    <div class="sf-kpi-sub">Reports missing checklist</div>
+    <div class="sf-kpi-sub">Reports missing symptoms</div>
   </div>
 </div>
 
@@ -160,7 +160,7 @@
 
         {% if current_user.has_permission('manage_diseases') %}
         <div class="col-md-6">
-          <a class="sf-action" href="{{ url_for('admin.new_disease') }}">
+          <a class="sf-action" href="{{ url_for('doctor.new_disease') }}">
             <div class="sf-action-ico"><i class="bi bi-plus-circle" aria-hidden="true"></i></div>
             <div>
               <div class="sf-action-title">Add disease report</div>
@@ -170,16 +170,6 @@
           </a>
         </div>
 
-        <div class="col-md-6">
-          <a class="sf-action" href="{{ url_for('admin.diseases') }}">
-            <div class="sf-action-ico"><i class="bi bi-folder2-open" aria-hidden="true"></i></div>
-            <div>
-              <div class="sf-action-title">Manage reports</div>
-              <div class="sf-action-sub">Edit symptoms and rules</div>
-            </div>
-            <div class="sf-action-go">›</div>
-          </a>
-        </div>
         {% endif %}
       </div>
     </div>

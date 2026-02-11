@@ -1,9 +1,8 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, url_for
 from flask_login import current_user, login_required
 
 from extensions import db
 from app.forms import ProfileForm
-from app.models.notification import Notification
 from app.models.user import User
 from app.utils import permission_required
 
@@ -57,13 +56,3 @@ def profile():
         return redirect(url_for("user.profile"))
 
     return render_template("user/profile.html", form=form)
-
-
-@user_bp.route("/notifications/read", methods=["POST"])
-@login_required
-def mark_notifications_read():
-    Notification.query.filter_by(user_id=current_user.id, is_read=False).update(
-        {Notification.is_read: True}
-    )
-    db.session.commit()
-    return redirect(request.referrer or url_for("main.home"))

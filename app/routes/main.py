@@ -1,4 +1,6 @@
 import json
+import os
+from uuid import uuid4
 
 from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required
@@ -11,9 +13,18 @@ from app.models.symptom_check import SymptomCheck, SymptomCheckResult, SymptomCh
 from app.utils import permission_required
 
 from app.services.diagnosis_db import diagnose, symptoms_grouped, symptom_index
-from app.services.notifications import create_notification, notify_admins
+from app.services.disease_helpers import save_uploaded_image
 
 main_bp = Blueprint("main", __name__)
+
+
+def _is_developer_account() -> bool:
+    # Doctors/admins maintain the system, so feedback submission is for normal users only.
+    return (
+        current_user.role in {"admin", "doctor"}
+        or current_user.has_permission("manage_diseases")
+        or current_user.has_permission("access_admin")
+    )
 
 
 @main_bp.route("/")
@@ -162,6 +173,7 @@ def diagnose_page():
 
         selected = request.form.getlist("symptoms")
         results = diagnose(selected, top_k=3)
+        created_check_id = None
 
         # Store a history row so admins can analyze symptom patterns and improve the system.
         # This is "best effort" logging (it should never break diagnosis UX).
@@ -183,6 +195,7 @@ def diagnose_page():
 
             db.session.add(check)
             db.session.flush()  # assigns check.id
+            created_check_id = check.id
 
             for k in valid_selected:
                 s = idx.get(k)
@@ -212,27 +225,6 @@ def diagnose_page():
                 )
 
             db.session.commit()
-
-            if current_user.has_permission("manage_diseases"):
-                note_link = None
-                if current_user.has_permission("view_symptom_checks"):
-                    note_link = url_for("doctor.symptom_check_detail", check_id=check.id)
-
-                top_label = check.top_disease_name or "No strong match"
-                note_body = f"Top match: {top_label}. Selected {len(valid_selected)} symptom(s)."
-
-                notify_admins(
-                    title="Doctor symptom check",
-                    body=note_body,
-                    link=note_link,
-                )
-                if not current_user.is_admin:
-                    create_notification(
-                        user_id=current_user.id,
-                        title="Symptom check completed",
-                        body=note_body,
-                        link=note_link,
-                    )
         except Exception:
             db.session.rollback()
             current_app.logger.exception("Failed to log symptom checker event")
@@ -246,6 +238,16 @@ def diagnose_page():
             "No strong match found for the selected symptoms. Try selecting additional symptoms (or remove uncertain ones).",
             "warning",
         )
+        if created_check_id and not _is_developer_account():
+            return redirect(
+                url_for(
+                    "main.feedback",
+                    symptom_check_id=created_check_id,
+                    mode="no_match",
+                )
+            )
+        if created_check_id and _is_developer_account():
+            flash("Feedback submission is disabled for doctor/admin accounts.", "info")
 
     return render_template(
         "diagnose.html",
@@ -258,25 +260,95 @@ def diagnose_page():
 @main_bp.route("/feedback", methods=["GET", "POST"])
 @login_required
 def feedback():
+    if _is_developer_account():
+        flash("Doctor and admin accounts cannot submit feedback.", "warning")
+        return redirect(url_for("main.home"))
+
     form = FeedbackForm()
+    requested_mode = (request.args.get("mode") or "").strip().lower()
+    linked_check = None
+    require_photo = True
+
+    if request.method == "GET":
+        requested_check_id = request.args.get("symptom_check_id", type=int)
+        if requested_mode != "no_match" or not requested_check_id:
+            flash("Feedback is only available when no symptom match is found.", "info")
+            return redirect(url_for("main.diagnose_page"))
+
+        linked_check = SymptomCheck.query.filter_by(
+            id=requested_check_id,
+            user_id=current_user.id,
+        ).first()
+        if not linked_check or linked_check.top_disease_slug:
+            flash("Invalid no-match symptom check.", "danger")
+            return redirect(url_for("main.diagnose_page"))
+
+        if not form.subject.data:
+            form.subject.data = f"No match for symptom check #{linked_check.id}"
+        form.symptom_check_id.data = str(linked_check.id)
+        form.require_photo.data = "1"
+
+    if request.method == "POST":
+        posted_check_id = (form.symptom_check_id.data or "").strip()
+        if posted_check_id.isdigit():
+            linked_check = SymptomCheck.query.filter_by(
+                id=int(posted_check_id),
+                user_id=current_user.id,
+            ).first()
+        if not linked_check or linked_check.top_disease_slug:
+            flash("Linked symptom check is invalid for no-match feedback.", "danger")
+            return redirect(url_for("main.diagnose_page"))
 
     if form.validate_on_submit():
+        stored_photo = None
+        if form.photo.data:
+            feedback_dir = os.path.join(current_app.root_path, "static", "uploads", "feedback")
+            try:
+                stored_photo = save_uploaded_image(
+                    form.photo.data,
+                    images_dir=feedback_dir,
+                    filename_prefix=f"feedback_{current_user.id}_{uuid4().hex}",
+                )
+            except ValueError:
+                flash("Photo must be PNG/JPG/WEBP.", "danger")
+                return render_template(
+                    "feedback.html",
+                    form=form,
+                    linked_check=linked_check,
+                    require_photo=require_photo,
+                )
+
+        if require_photo and not stored_photo:
+            flash("Please upload at least one photo for no-match symptom feedback.", "danger")
+            return render_template(
+                "feedback.html",
+                form=form,
+                linked_check=linked_check,
+                require_photo=require_photo,
+            )
+
         item = Feedback(
             user_id=current_user.id,
             subject=form.subject.data.strip(),
             message=form.message.data.strip(),
+            symptom_check_id=linked_check.id if linked_check else None,
+            photo_filename=stored_photo,
         )
         db.session.add(item)
         db.session.commit()
-        flash("Feedback sent. Thank you!", "success")
-        return redirect(url_for("main.feedback"))
+        flash("Report sent. Thank you for helping improve symptom matching.", "success")
+        return redirect(url_for("main.diagnose_page"))
 
-    feedback_items = (
-        Feedback.query.filter_by(user_id=current_user.id)
-        .order_by(Feedback.created_at.desc())
-        .all()
+    if not linked_check:
+        flash("Feedback is only available when no symptom match is found.", "info")
+        return redirect(url_for("main.diagnose_page"))
+
+    return render_template(
+        "feedback.html",
+        form=form,
+        linked_check=linked_check,
+        require_photo=require_photo,
     )
-    return render_template("feedback.html", form=form, feedback_items=feedback_items)
 
 
 @main_bp.route("/search")

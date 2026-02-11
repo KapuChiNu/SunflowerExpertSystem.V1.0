@@ -58,15 +58,19 @@
           <span>Disease Library</span>
         </a>
 
-        {% if current_user.has_permission('manage_diseases') %}
+        {% if current_user.has_permission('manage_diseases') and not current_user.has_permission('access_admin') %}
           <div class="sf-nav-section">DOCTOR</div>
           <a class="sf-nav-item {% if request.path.startswith('/doctor') and (request.path == '/doctor' or request.path.startswith('/doctor/dashboard')) %}is-active{% endif %}" href="{{ url_for('doctor.dashboard') }}">
             <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-heart-pulse"></i></span>
             <span>Doctor Dashboard</span>
           </a>
-          <a class="sf-nav-item {% if request.path.startswith('/doctor/diseases') or request.path.startswith('/doctor/disease') %}is-active{% endif %}" href="{{ url_for('doctor.diseases') }}">
+          <a class="sf-nav-item {% if request.path.startswith('/doctor/diseases') or request.path.startswith('/doctor/disease/') %}is-active{% endif %}" href="{{ url_for('doctor.diseases') }}">
             <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-folder2-open"></i></span>
             <span>Disease Center</span>
+          </a>
+          <a class="sf-nav-item {% if request.path.startswith('/doctor/checklists') or request.path.startswith('/doctor/checklist/') %}is-active{% endif %}" href="{{ url_for('doctor.checklists') }}">
+            <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-list-check"></i></span>
+            <span>Manage Symptoms</span>
           </a>
           {% if current_user.has_permission('view_symptom_checks') %}
           <a class="sf-nav-item {% if request.path.startswith('/doctor/symptom') %}is-active{% endif %}" href="{{ url_for('doctor.symptom_checks') }}">
@@ -74,6 +78,10 @@
             <span>Symptom Logs</span>
           </a>
           {% endif %}
+          <a class="sf-nav-item {% if request.path.startswith('/doctor/feedback') %}is-active{% endif %}" href="{{ url_for('doctor.feedback') }}">
+            <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-chat-left-text"></i></span>
+            <span>Feedback Inbox</span>
+          </a>
         {% endif %}
 
         {% if current_user.has_permission('access_admin') %}
@@ -81,6 +89,14 @@
           <a class="sf-nav-item {% if request.path.startswith('/admin/dashboard') %}is-active{% endif %}" href="{{ url_for('admin.dashboard') }}">
             <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-shield-lock"></i></span>
             <span>Admin Dashboard</span>
+          </a>
+          <a class="sf-nav-item {% if request.path.startswith('/admin/diseases') or request.path.startswith('/admin/disease/') %}is-active{% endif %}" href="{{ url_for('admin.diseases') }}">
+            <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-folder2-open"></i></span>
+            <span>Manage Diseases</span>
+          </a>
+          <a class="sf-nav-item {% if request.path.startswith('/admin/checklists') or request.path.startswith('/admin/checklist/') %}is-active{% endif %}" href="{{ url_for('admin.checklists') }}">
+            <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-list-check"></i></span>
+            <span>Manage Symptoms</span>
           </a>
           <a class="sf-nav-item {% if request.path.startswith('/admin/feedback') %}is-active{% endif %}" href="{{ url_for('admin.feedback') }}">
             <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-chat-dots"></i></span>
@@ -90,6 +106,10 @@
             <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-people"></i></span>
             <span>Users</span>
           </a>
+          <a class="sf-nav-item {% if request.path.startswith('/admin/roles') %}is-active{% endif %}" href="{{ url_for('admin.roles') }}">
+            <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-person-badge"></i></span>
+            <span>Roles</span>
+          </a>
           <a class="sf-nav-item {% if request.path.startswith('/admin/symptom') %}is-active{% endif %}" href="{{ url_for('admin.symptom_checks') }}">
             <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-bar-chart-line"></i></span>
             <span>Symptom Logs</span>
@@ -97,10 +117,6 @@
         {% endif %}
 
         <div class="sf-nav-section">ACCOUNT</div>
-        <a class="sf-nav-item {% if request.path.startswith('/feedback') %}is-active{% endif %}" href="{{ url_for('main.feedback') }}">
-          <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-chat-square-text"></i></span>
-          <span>Feedback</span>
-        </a>
         <a class="sf-nav-item {% if request.path.startswith('/user/profile') %}is-active{% endif %}" href="{{ url_for('user.profile') }}">
           <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-person"></i></span>
           <span>Profile</span>
@@ -131,49 +147,7 @@
           <div class="sf-search-suggest" data-search-suggest aria-hidden="true"></div>
         </form>
 
-        {% set notif_items = notifications | default([]) %}
-        {% set notif_unread = notification_unread_count | default(0) %}
         <div class="sf-top-actions">
-          <div class="sf-notif" data-notifications>
-            <button class="sf-icon-btn" type="button" data-action="toggleNotifications" aria-label="Notifications" title="Notifications" aria-haspopup="true" aria-expanded="false" aria-controls="sf-notif-panel">
-              <i class="bi bi-bell" aria-hidden="true"></i>
-              {% if notif_unread > 0 %}
-                <span class="sf-notif-badge">{{ "99+" if notif_unread > 99 else notif_unread }}</span>
-              {% endif %}
-            </button>
-            <div class="sf-notif-panel" id="sf-notif-panel" aria-hidden="true">
-              <div class="sf-notif-head">
-                <div class="sf-notif-title">Notifications</div>
-                {% if notif_unread > 0 %}
-                  <form method="post" action="{{ url_for('user.mark_notifications_read') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button class="sf-notif-clear" type="submit">Mark all read</button>
-                  </form>
-                {% endif %}
-              </div>
-              <div class="sf-notif-list">
-                {% if notif_items %}
-                  {% for n in notif_items %}
-                    {% if n.link %}
-                      <a class="sf-notif-item {% if not n.is_read %}is-unread{% endif %}" href="{{ n.link }}">
-                        <div class="sf-notif-item-title">{{ n.title }}</div>
-                        {% if n.body %}<div class="sf-notif-item-body">{{ n.body }}</div>{% endif %}
-                        <div class="sf-notif-item-time">{{ n.created_at.strftime("%b %d, %Y %H:%M") }}</div>
-                      </a>
-                    {% else %}
-                      <div class="sf-notif-item {% if not n.is_read %}is-unread{% endif %}">
-                        <div class="sf-notif-item-title">{{ n.title }}</div>
-                        {% if n.body %}<div class="sf-notif-item-body">{{ n.body }}</div>{% endif %}
-                        <div class="sf-notif-item-time">{{ n.created_at.strftime("%b %d, %Y %H:%M") }}</div>
-                      </div>
-                    {% endif %}
-                  {% endfor %}
-                {% else %}
-                  <div class="sf-notif-empty">No notifications yet.</div>
-                {% endif %}
-              </div>
-            </div>
-          </div>
           <a class="sf-primary-btn" href="{{ url_for('main.diagnose_page') }}">
             <i class="bi bi-plus-lg" aria-hidden="true"></i>
             New symptom check

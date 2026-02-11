@@ -26,46 +26,6 @@
       </div>
 
       <div class="col-12">
-        <label class="form-label">Symptom checklist</label>
-        <div class="row g-3">
-          <div class="col-lg-4">
-            <label class="form-label">{{ form.symptom_checklist_leaf.label.text }}</label>
-            {{ form.symptom_checklist_leaf(class="form-control", rows="6", placeholder="Yellow spots on leaves\nBrown leaf lesions\nWilting leaves") }}
-          </div>
-          <div class="col-lg-4">
-            <label class="form-label">{{ form.symptom_checklist_leaf_head.label.text }}</label>
-            {{ form.symptom_checklist_leaf_head(class="form-control", rows="6", placeholder="White fuzzy mold on head\nSoft rot at head\nLeaf and head discoloration") }}
-          </div>
-          <div class="col-lg-4">
-            <label class="form-label">{{ form.symptom_checklist_whole_plant.label.text }}</label>
-            {{ form.symptom_checklist_whole_plant(class="form-control", rows="6", placeholder="Wilting or drooping\nStunted growth\nWhole plant yellowing") }}
-          </div>
-
-          <div class="col-lg-4">
-            <label class="form-label">{{ form.symptom_checklist_stem.label.text }}</label>
-            {{ form.symptom_checklist_stem(class="form-control", rows="6", placeholder="Brown/black stem lesions\nSoft stem rot\nStem cracking") }}
-          </div>
-          <div class="col-lg-4">
-            <label class="form-label">{{ form.symptom_checklist_head.label.text }}</label>
-            {{ form.symptom_checklist_head(class="form-control", rows="6", placeholder="Rot on flower head\nWater-soaked head tissue\nHead discoloration") }}
-          </div>
-          <div class="col-lg-4">
-            <label class="form-label">{{ form.symptom_checklist_root.label.text }}</label>
-            {{ form.symptom_checklist_root(class="form-control", rows="6", placeholder="Root rot\nPoor root growth\nDarkened roots") }}
-          </div>
-
-          <div class="col-lg-4">
-            <label class="form-label">{{ form.symptom_checklist_environment.label.text }}</label>
-            {{ form.symptom_checklist_environment(class="form-control", rows="6", placeholder="Cool, wet conditions\nHigh humidity\nPoor drainage") }}
-            <div class="small text-muted mt-1">Use this for weather or field conditions (humidity, temperature, soil moisture).</div>
-          </div>
-        </div>
-        <div class="small text-muted mt-2">
-          One symptom per line. These lines create the checklist used by the symptom checker for this report.
-        </div>
-      </div>
-
-      <div class="col-12">
         <label class="form-label">{{ form.symptoms.label.text }}</label>
         {{ form.symptoms(class="form-control", rows="3") }}
       </div>
@@ -82,8 +42,9 @@
         {{ form.prevention(class="form-control", rows="3") }}
       </div>
 
-      <div class="col-12 d-flex gap-2">
+      <div class="col-12 d-flex gap-2 flex-wrap">
         {{ form.submit(class="btn btn-dark") }}
+        <a class="btn btn-outline-dark" href="{{ url_for('admin.edit_checklist', disease_id=disease.id) }}">Manage symptoms</a>
         <a class="btn btn-outline-secondary" href="{{ url_for('main.disease_detail', slug=disease.slug) }}">View</a>
       </div>
     </div>

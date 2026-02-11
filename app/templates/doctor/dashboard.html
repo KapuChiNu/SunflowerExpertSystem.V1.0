@@ -5,10 +5,11 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
   <div>
     <h1 class="h3 mb-1">Doctor dashboard</h1>
-    <div class="text-muted">Track disease reports and keep the checklist library updated.</div>
+    <div class="text-muted">Track disease reports and keep the symptom library updated.</div>
   </div>
   <div class="d-flex gap-2">
     <a class="btn btn-outline-dark" href="{{ url_for('doctor.diseases') }}">Disease center</a>
+    <a class="btn btn-outline-dark" href="{{ url_for('doctor.feedback') }}">Feedback inbox</a>
     {% if current_user.has_permission('view_symptom_checks') %}
     <a class="btn btn-outline-primary" href="{{ url_for('doctor.symptom_checks') }}">Symptom logs</a>
     {% endif %}
@@ -28,11 +29,15 @@
           <div class="h3 mb-0">{{ disease_count }}</div>
         </div>
         <div class="border rounded-4 p-3 flex-grow-1">
-          <div class="text-muted small">Pending checklists</div>
+          <div class="text-muted small">Pending symptoms</div>
           <div class="h3 mb-0">{{ pending_reports }}</div>
         </div>
+        <div class="border rounded-4 p-3 flex-grow-1">
+          <div class="text-muted small">Open feedback</div>
+          <div class="h3 mb-0">{{ open_feedback }}</div>
+        </div>
       </div>
-      <div class="text-muted small mt-3">Tip: add checklist items for new diseases to improve the symptom checker.</div>
+      <div class="text-muted small mt-3">Tip: keep disease reports updated to improve diagnosis quality.</div>
     </div>
   </div>
 
@@ -53,7 +58,7 @@
                 <div class="text-muted small">{{ c.created_at.strftime("%Y-%m-%d %H:%M") }}</div>
               </div>
               {% if current_user.has_permission('view_symptom_checks') %}
-              <a class="btn btn-sm btn-success" href="{{ url_for('admin.symptom_check_detail', check_id=c.id) }}">Details</a>
+              <a class="btn btn-sm btn-success" href="{{ url_for('doctor.symptom_check_detail', check_id=c.id) }}">Details</a>
               {% endif %}
             </div>
           {% endfor %}

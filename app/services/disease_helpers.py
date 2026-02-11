@@ -9,6 +9,7 @@ _WHOLE_PLANT_CATEGORY = "Whole plant"
 _STEM_CATEGORY = "Stem"
 _HEAD_CATEGORY = "Head"
 _ROOT_CATEGORY = "Root"
+_SEEDLING_CATEGORY = "Seed / Seedling"
 _ENV_CATEGORY = "Environment"
 
 
@@ -37,6 +38,7 @@ def build_checklist_from_sections(
     head_text: str,
     root_text: str,
     environment_text: str,
+    seedling_text: str = "",
 ) -> list[dict]:
     """Create checklist items from section inputs."""
     items: list[dict] = []
@@ -66,6 +68,9 @@ def build_checklist_from_sections(
     for line in _clean_lines(root_text):
         add_item(line, _ROOT_CATEGORY)
 
+    for line in _clean_lines(seedling_text):
+        add_item(line, _SEEDLING_CATEGORY)
+
     env_lines = []
     for line in _clean_lines(environment_text):
         if ":" in line:
@@ -92,6 +97,7 @@ def split_checklist_sections(items: list[dict]) -> dict:
     stem: list[str] = []
     head: list[str] = []
     root: list[str] = []
+    seedling: list[str] = []
     environment: list[str] = []
 
     for it in items or []:
@@ -113,6 +119,8 @@ def split_checklist_sections(items: list[dict]) -> dict:
             head.append(label)
         elif norm == "root":
             root.append(label)
+        elif norm in {"seed", "seedling", "seedlings", "seedseedling"}:
+            seedling.append(label)
         elif norm in {"environment", "env", "environmental"}:
             environment.append(label)
         else:
@@ -128,6 +136,7 @@ def split_checklist_sections(items: list[dict]) -> dict:
         "stem": "\n".join(stem),
         "head": "\n".join(head),
         "root": "\n".join(root),
+        "seedling": "\n".join(seedling),
         "environment": "\n".join(environment),
     }
 
