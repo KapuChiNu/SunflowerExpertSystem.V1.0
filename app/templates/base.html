@@ -15,7 +15,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
   <!-- App styles -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=14">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=15">
 </head>
 
 <body>
@@ -53,6 +53,12 @@
           <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-clipboard2-pulse"></i></span>
           <span data-i18n="nav_symptom_check">Symptom Check</span>
         </a>
+        {% if not current_user.has_permission('view_symptom_checks') %}
+        <a class="sf-nav-item {% if request.path.startswith('/symptom-history') %}is-active{% endif %}" href="{{ url_for('main.symptom_history') }}">
+          <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-bar-chart-line"></i></span>
+          <span data-i18n="nav_symptom_history">Symptom History</span>
+        </a>
+        {% endif %}
         <a class="sf-nav-item" href="{{ url_for('main.home') }}#library">
           <span class="sf-nav-ico" aria-hidden="true"><i class="bi bi-journal-medical"></i></span>
           <span data-i18n="nav_disease_library">Disease Library</span>
@@ -161,7 +167,7 @@
           <div class="sf-userchip" title="Signed in">
             <div class="sf-avatar" aria-hidden="true">{{ (current_user.username or 'U')[0] | upper }}</div>
             <div class="sf-userchip-text d-none d-sm-block">
-              <div class="sf-userchip-name">{{ current_user.username }}</div>
+              <div class="sf-userchip-name" data-no-translate>{{ current_user.username }}</div>
               <div class="sf-userchip-role">{{ (current_user.role or 'user') | capitalize }}</div>
             </div>
           </div>
@@ -240,6 +246,6 @@
   {% endif %}
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="{{ url_for('static', filename='js/app.js') }}?v=9" defer></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}?v=12" defer></script>
 </body>
 </html>

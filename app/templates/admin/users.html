@@ -29,7 +29,7 @@
           {% for u in users %}
             <tr>
               <td class="text-muted">{{ u.id }}</td>
-              <td class="fw-semibold">{{ u.username }}</td>
+              <td class="fw-semibold"><span data-no-translate>{{ u.username }}</span></td>
               <td class="text-muted">{{ u.email }}</td>
               <td>
                 <span class="badge text-bg-{% if u.role == 'admin' %}success{% else %}secondary{% endif %}">

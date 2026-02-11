@@ -5,7 +5,7 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
   <div>
     <h1 class="h3 mb-1">Change user role</h1>
-    <div class="text-muted">Update role assignment for <strong>{{ user.username }}</strong>.</div>
+    <div class="text-muted">Update role assignment for <strong><span data-no-translate>{{ user.username }}</span></strong>.</div>
   </div>
   <a class="btn btn-outline-dark" href="{{ url_for('admin.users') }}">Back to users</a>
 </div>
@@ -17,7 +17,7 @@
     <div class="row g-3">
       <div class="col-md-6">
         <label class="form-label">Username</label>
-        <div class="form-control-plaintext">{{ user.username }}</div>
+        <div class="form-control-plaintext"><span data-no-translate>{{ user.username }}</span></div>
       </div>
 
       <div class="col-md-6">

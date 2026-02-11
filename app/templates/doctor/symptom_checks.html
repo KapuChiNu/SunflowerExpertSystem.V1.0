@@ -35,7 +35,7 @@
             <tr>
               <td class="text-muted">{{ c.id }}</td>
               <td class="text-muted small">{{ c.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
-              <td class="fw-semibold">{{ c.user.username }}</td>
+              <td class="fw-semibold"><span data-no-translate>{{ c.user.username }}</span></td>
               <td class="text-muted">{{ c.selected_count }}</td>
               <td>
                 {% if c.top_disease_name %}

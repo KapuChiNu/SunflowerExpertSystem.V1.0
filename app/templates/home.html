@@ -23,7 +23,7 @@
   {% elif current_user.has_permission('view_symptom_checks') %}
     <a class="sf-tab" href="{{ url_for('doctor.symptom_checks') }}">Symptom History</a>
   {% else %}
-    <a class="sf-tab" href="#history">Symptom History</a>
+    <a class="sf-tab" href="{{ url_for('main.symptom_history') }}">Symptom History</a>
   {% endif %}
   <a class="sf-tab" href="#tips">Prevention Tips</a>
 </div>

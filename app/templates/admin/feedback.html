@@ -30,7 +30,7 @@
           {% for f in feedback_items %}
             <tr>
               <td>
-                <div class="fw-semibold">{{ f.user.username }}</div>
+                <div class="fw-semibold"><span data-no-translate>{{ f.user.username }}</span></div>
                 <div class="text-muted small">{{ f.user.email }}</div>
               </td>
               <td class="fw-semibold">{{ f.subject }}</td>

@@ -82,6 +82,8 @@
       'Latest diagnosis': 'ការវិនិច្ឆ័យចុងក្រោយ',
       'No match yet': 'មិនទាន់មានលទ្ធផល',
       'No result': 'គ្មានលទ្ធផល',
+      'Checked on ': 'បានពិនិត្យនៅ ',
+      'symptoms selected': 'រោគសញ្ញាដែលបានជ្រើស',
       'Matched symptoms': 'រោគសញ្ញាដែលផ្គូផ្គង',
       'No matched symptoms yet': 'មិនទាន់មានរោគសញ្ញាផ្គូផ្គង',
       'Run symptom check': 'ដំណើរការពិនិត្យរោគសញ្ញា',
@@ -107,6 +109,7 @@
       'No results found': 'មិនមានលទ្ធផល',
       'Manage diseases': 'គ្រប់គ្រងជំងឺ',
       'Manage symptoms': 'គ្រប់គ្រងរោគសញ្ញា',
+      'Symptom History': 'ប្រវត្តិរោគសញ្ញា',
       'All symptoms': 'រោគសញ្ញាទាំងអស់',
       'Add symptom': 'បន្ថែមរោគសញ្ញា',
       'Symptom label': 'ស្លាករោគសញ្ញា',
@@ -174,6 +177,7 @@
       'Admins can add, update, and delete disease reports.': 'អ្នកគ្រប់គ្រងអាចបន្ថែម កែប្រែ និងលុបរបាយការណ៍ជំងឺ។',
       'Quick stats': 'ស្ថិតិរហ័ស',
       'Diseases': 'ជំងឺ',
+      'Pending symptoms': 'រោគសញ្ញាខ្វះ',
       'Open feedback': 'មតិកែលម្អបើក',
       'Recent symptom checks': 'ការត្រួតពិនិត្យថ្មីៗ',
       'View all': 'មើលទាំងអស់',
@@ -207,6 +211,17 @@
       '7. Seed / Seedling': '7. គ្រាប់ / កូនដំណាំ',
       '8. Environment': '8. បរិស្ថាន',
       'Yellow spots on leaves': 'ចំណុចពណ៌លឿងលើស្លឹក',
+      'Dark brown/black leaf spots': 'ចំណុចពណ៌ត្នោតចាស់/ខ្មៅលើស្លឹក',
+      'Premature leaf drop': 'ស្លឹកជ្រុះមុនពេល',
+      'White fuzzy mold': 'ផ្សិតពណ៌សស្រួយ',
+      'Stunted growth': 'លូតលាស់យឺត/ខ្លី',
+      'Orange/brown rust pustules': 'ពពុះច្រេះពណ៌ទឹកក្រូច/ត្នោត',
+      'Wilting or drooping': 'ស្រពោន ឬ ទ្រេតធ្លាក់',
+      'Soft/watery stem rot': 'ដើមរលួយទន់/ជ្រាបទឹក',
+      'Rot on flower head': 'រលួយលើក្បាលផ្កា',
+      'Brown/black spots or lesions on stem': 'ចំណុច ឬ ដំបៅពណ៌ត្នោត/ខ្មៅលើដើម',
+      'Root rot / poor roots': 'ឫសរលួយ / ឫសខ្សោយ',
+      'Hot, dry field conditions': 'លក្ខខណ្ឌវាលក្តៅ និងស្ងួត',
       'Leaf and head discoloration': 'ស្លឹក និងក្បាលផ្កាប្រែពណ៌',
       'Whole plant wilting': 'រុក្ខជាតិទាំងមូលស្រពោន',
       'Stem lesions': 'ដំបៅលើដើម',
@@ -317,16 +332,22 @@
       'User feedback will show up here.': 'មតិកែលម្អរបស់អ្នកប្រើនឹងបង្ហាញនៅទីនេះ។',
       'Symptom Checks • Admin': 'ប្រវត្តិរោគសញ្ញា • អ្នកគ្រប់គ្រង',
       'Symptom Checks • Doctor': 'ប្រវត្តិរោគសញ្ញា • វេជ្ជបណ្ឌិត',
+      'My Symptom History': 'ប្រវត្តិរោគសញ្ញារបស់ខ្ញុំ',
       'Symptom checker history': 'ប្រវត្តិពិនិត្យរោគសញ្ញា',
+      'My symptom checker history': 'ប្រវត្តិពិនិត្យរោគសញ្ញារបស់ខ្ញុំ',
       'Recent symptom checker submissions (logged automatically).': 'កំណត់ត្រាពិនិត្យរោគសញ្ញាថ្មីៗ (កត់ត្រាដោយស្វ័យប្រវត្តិ)។',
+      'Your recent symptom checks and diagnosis results.': 'ប្រវត្តិពិនិត្យរោគសញ្ញា និងលទ្ធផលវិនិច្ឆ័យថ្មីៗរបស់អ្នក។',
       'Time': 'ពេលវេលា',
       'User': 'អ្នកប្រើ',
       'Selected symptoms': 'រោគសញ្ញាដែលបានជ្រើស',
       'Top match': 'លទ្ធផលកំពូល',
       'Actions': 'សកម្មភាព',
       'No symptom checker activity yet.': 'មិនទាន់មានសកម្មភាពពិនិត្យរោគសញ្ញា។',
+      'You do not have any symptom checks yet.': 'អ្នកមិនទាន់មានប្រវត្តិពិនិត្យរោគសញ្ញាទេ។',
+      'Start your first check': 'ចាប់ផ្តើមការពិនិត្យដំបូងរបស់អ្នក',
       'Symptom Check • Admin': 'ការពិនិត្យរោគសញ្ញា • អ្នកគ្រប់គ្រង',
       'Symptom Check • Doctor': 'ការពិនិត្យរោគសញ្ញា • វេជ្ជបណ្ឌិត',
+      'Run new check': 'ដំណើរការពិនិត្យថ្មី',
       'By ': 'ដោយ ',
       'Diagnosis results': 'លទ្ធផលវិនិច្ឆ័យ',
       'Key: ': 'កូដ៖ ',
@@ -496,6 +517,10 @@
       { pattern: /(\d+)\s+match\(es\)/g, replace: '$1 ការផ្គូផ្គង' },
       { pattern: /(\d+)\s+disease\(s\)/g, replace: '$1 ជំងឺ' },
       { pattern: /(\d+)\s+item\(s\)/g, replace: '$1 ធាតុ' },
+      { pattern: /(\d+)\s+symptoms\s+selected\b/g, replace: '$1 រោគសញ្ញាដែលបានជ្រើស' },
+      { pattern: /(\d+)\s+symptom\s+selected\b/g, replace: '$1 រោគសញ្ញាដែលបានជ្រើស' },
+      { pattern: /(\d+)\s+symptoms\b/g, replace: '$1 រោគសញ្ញា' },
+      { pattern: /(\d+)\s+symptom\b/g, replace: '$1 រោគសញ្ញា' },
       { pattern: /(\d+)\s+symptom\(s\)/g, replace: '$1 រោគសញ្ញា' },
       { pattern: /(\d+)\s+selected\b/g, replace: '$1 បានជ្រើស' },
       { pattern: /(\d+)\s+visible\b/g, replace: '$1 មើលឃើញ' },
@@ -503,6 +528,7 @@
       { pattern: /\+(\d+)\s+more\b/g, replace: '+$1 បន្ថែម' },
       { pattern: /Check #(\d+)/g, replace: 'ការពិនិត្យ #$1' },
       { pattern: /Symptom check #(\d+)/g, replace: 'ការពិនិត្យរោគសញ្ញា #$1' },
+      { pattern: /Symptom Check #(\d+)/g, replace: 'ការពិនិត្យរោគសញ្ញា #$1' },
       { pattern: /No match for symptom check #(\d+)/g, replace: 'មិនផ្គូផ្គងសម្រាប់ការពិនិត្យរោគសញ្ញា #$1' },
       { pattern: /Deleted (\d+) symptom check\(s\) for (.+)\./g, replace: 'បានលុបប្រវត្តិពិនិត្យរោគសញ្ញា $1 សម្រាប់ $2។' },
       { pattern: /(\d+)\s+disease\b/g, replace: '$1 ជំងឺ' },
@@ -625,6 +651,7 @@
       if (!parent) return;
       if (parent.closest('script,style,noscript,textarea,code,pre')) return;
       if (parent.closest('[data-i18n], [data-i18n-placeholder], [data-i18n-title]')) return;
+      if (parent.closest('[data-no-translate]')) return;
 
       const raw = node.nodeValue || '';
       if (!raw.trim()) return;
@@ -632,14 +659,16 @@
       if (isKhmer) {
         const source = looseTextOriginals.get(node) || raw;
         const translated = translateLooseText(lang, source);
-        if (translated === source) {
-          queueRemoteTranslation(source);
-          return;
-        }
         if (!looseTextOriginals.has(node)) {
           looseTextOriginals.set(node, source);
         }
-        node.nodeValue = translated;
+        if (translated !== source) {
+          node.nodeValue = translated;
+        }
+        // If any English still remains after local replacements, ask remote translator too.
+        if (translated === source || /[A-Za-z]/.test(translated)) {
+          queueRemoteTranslation(source);
+        }
         return;
       }
 
@@ -651,6 +680,7 @@
     document.querySelectorAll('[placeholder]').forEach((node) => {
       if (!(node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement)) return;
       if (node.hasAttribute('data-i18n-placeholder')) return;
+      if (node.closest('[data-no-translate]')) return;
       const original = node.dataset.i18nLoosePlaceholder || node.getAttribute('placeholder') || '';
       if (!original) return;
       if (!node.dataset.i18nLoosePlaceholder) {
@@ -668,6 +698,7 @@
     document.querySelectorAll('[title]').forEach((node) => {
       if (!(node instanceof HTMLElement)) return;
       if (node.hasAttribute('data-i18n-title')) return;
+      if (node.closest('[data-no-translate]')) return;
       const original = node.dataset.i18nLooseTitle || node.getAttribute('title') || '';
       if (!original) return;
       if (!node.dataset.i18nLooseTitle) {
@@ -684,6 +715,7 @@
 
     document.querySelectorAll('input[type="submit"], input[type="button"], input[type="reset"]').forEach((node) => {
       if (!(node instanceof HTMLInputElement)) return;
+      if (node.closest('[data-no-translate]')) return;
       const original = node.dataset.i18nLooseValue || node.value || '';
       if (!original) return;
       if (!node.dataset.i18nLooseValue) {
@@ -700,6 +732,7 @@
 
     document.querySelectorAll('[onsubmit]').forEach((node) => {
       if (!(node instanceof HTMLElement)) return;
+      if (node.closest('[data-no-translate]')) return;
       const original = node.dataset.i18nLooseOnsubmit || node.getAttribute('onsubmit') || '';
       if (!original) return;
       if (!node.dataset.i18nLooseOnsubmit) {

@@ -817,6 +817,20 @@ html[data-theme="dark"] .sf-pill { background: rgba(31, 180, 118, 0.12); }
 
 html[data-theme="dark"] .sf-public-top { background: rgba(17, 24, 39, 0.70); }
 
+.sf-public-top .sf-brand {
+  color: var(--sf-text);
+}
+
+.sf-public-top .sf-brand-sub {
+  color: var(--sf-muted);
+}
+
+.sf-public-top .sf-brand-icon {
+  color: var(--sf-accent-strong);
+  background: rgba(242, 191, 76, 0.22);
+  border-color: rgba(79, 169, 95, 0.32);
+}
+
 .sf-public-inner {
   display: flex;
   justify-content: space-between;

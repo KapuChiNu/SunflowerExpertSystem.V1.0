@@ -30,11 +30,21 @@
         <div class="fw-semibold">{{ d.name }}</div>
         <div class="text-muted small">slug: {{ d.slug }}</div>
         <div class="text-muted small">
-          Created by: {{ d.created_by.username if d.created_by else "Unknown" }}
+          Created by:
+          {% if d.created_by %}
+            <span data-no-translate>{{ d.created_by.username }}</span>
+          {% else %}
+            Unknown
+          {% endif %}
           {% if d.created_at %}• {{ d.created_at.strftime("%Y-%m-%d %H:%M") }}{% endif %}
         </div>
         <div class="text-muted small">
-          Last updated by: {{ d.updated_by.username if d.updated_by else "Unknown" }}
+          Last updated by:
+          {% if d.updated_by %}
+            <span data-no-translate>{{ d.updated_by.username }}</span>
+          {% else %}
+            Unknown
+          {% endif %}
           {% if d.updated_at %}• {{ d.updated_at.strftime("%Y-%m-%d %H:%M") }}{% endif %}
         </div>
         <div class="text-muted small">Symptom checklist items: {{ d.checklist_items()|length }}</div>

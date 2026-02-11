@@ -136,6 +136,54 @@ def home():
     )
 
 
+@main_bp.route("/symptom-history")
+@login_required
+def symptom_history():
+    checks = (
+        SymptomCheck.query.filter_by(user_id=current_user.id)
+        .order_by(SymptomCheck.created_at.desc())
+        .limit(200)
+        .all()
+    )
+    return render_template("symptom_checks.html", checks=checks)
+
+
+@main_bp.route("/symptom-history/<int:check_id>")
+@login_required
+def symptom_history_detail(check_id: int):
+    check = SymptomCheck.query.filter_by(id=check_id, user_id=current_user.id).first_or_404()
+
+    parsed_results = []
+    for r in check.results:
+        try:
+            matched = json.loads(r.matched_json) if r.matched_json else []
+        except Exception:
+            matched = []
+
+        disease_id = r.disease_id
+        if not disease_id and r.disease_key:
+            disease_row = Disease.query.filter_by(slug=r.disease_key).first()
+            disease_id = disease_row.id if disease_row else None
+
+        parsed_results.append(
+            {
+                "rank": r.rank,
+                "disease_id": disease_id,
+                "disease_key": r.disease_key,
+                "disease_name": r.disease_name,
+                "percent": r.percent,
+                "score": r.score,
+                "matched": matched,
+            }
+        )
+
+    return render_template(
+        "symptom_check_detail.html",
+        check=check,
+        parsed_results=parsed_results,
+    )
+
+
 @main_bp.route("/disease/<slug>")
 def disease_detail(slug):
     disease = Disease.query.filter_by(slug=slug).first_or_404()

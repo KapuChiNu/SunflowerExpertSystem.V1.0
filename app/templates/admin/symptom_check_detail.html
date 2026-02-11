@@ -5,7 +5,7 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
   <div>
     <h1 class="h3 mb-1">Symptom check #{{ check.id }}</h1>
-    <div class="text-muted">By <strong>{{ check.user.username }}</strong> • {{ check.created_at.strftime("%Y-%m-%d %H:%M") }}</div>
+    <div class="text-muted">By <strong><span data-no-translate>{{ check.user.username }}</span></strong> • {{ check.created_at.strftime("%Y-%m-%d %H:%M") }}</div>
   </div>
   <div class="d-flex gap-2">
     {% if current_user.has_permission("manage_diseases") %}
