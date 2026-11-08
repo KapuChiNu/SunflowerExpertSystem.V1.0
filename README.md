@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Doctor Sunflower Lab (Flask + SQLAlchemy)
 
 This app includes:
@@ -94,3 +95,7 @@ On startup the app will automatically create & seed:
 - `symptom_checks`, `symptom_check_symptoms`, `symptom_check_results` (symptom checker history)
 
 The `users.role` column is still used ("user" / "doctor" / "admin") for backwards compatibility.
+=======
+# SunflowerExpertSystem.V1.0
+The system that provides sunflower disease diagnosis 
+>>>>>>> 72c7bd72df40ff8d4ead8393b73345b86ab50ee6
